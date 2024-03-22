@@ -1,0 +1,35 @@
+// varying vec2 vUv;
+// uniform sampler2D backgroundTexture;
+// uniform sampler2D noiseTexture;
+// uniform vec3 distortionColor;
+// uniform float distortionPower;
+// uniform float uTime;
+
+void main() {
+    // // Получаем шум
+    // float noise = texture(noiseTexture, vUv).r;
+
+    // vec2 offset = distortionPower * vec2(fract(noise + uTime) * 0.75);
+    
+
+    // // Получаем искаженные координаты UV с использованием uTime в качестве коэффициента масштабирования
+    // vec2 distortedUV = vUv + offset;
+
+    // // Используем искаженные координаты UV для сэмплирования текстуры
+    // vec4 color = texture2D(backgroundTexture, distortedUV);
+
+    // // Изменяем цвет
+    // color.rgb *= distortionColor.rgb;
+
+    // // Затемняем цвет
+    // float darkeningFactor = 0.25;
+    // color.rgb *= darkeningFactor;
+
+    // // gl_FragDepth = 1.0;
+    // gl_FragColor = vec4(0.3, 0.6, 1.0, 1.0);
+    // // gl_FragColor = color;
+
+    // #include <tonemapping_fragment>
+    // // #include <encodings_fragment>
+    // #include <colorspace_fragment>
+}
