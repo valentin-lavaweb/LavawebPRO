@@ -28,17 +28,17 @@ export default function MainScene(props) {
     const progress = useRef(0.1);
     const currentScene = useRef(0)
     const nextScene = useRef(1)
-    const bg = new THREE.TextureLoader().load('/backgrounds/bg1.png')
     const [windowInnerWidth, setWindowInnerWidth] = useState(window.innerWidth)
     const [windowInnerHeight, setWindowInnerHeight] = useState(window.innerHeight)
     const renderTarget = useFBO()
     const renderTarget2 = useFBO()
-    const renderSceneTarget = useFBO()
     const renderTargetMenu = useFBO()
     const renderSceneRef = useRef({
         scene: useRef(),
         material: useRef()
     });
+
+    // Сцены
     const scenes = useRef([
         {
             scene: useRef(),
@@ -54,13 +54,16 @@ export default function MainScene(props) {
         },
     ])
     const sceneMenuRef = useRef()
-    const activeMenu = props.activeMenu
-    const darkness = useRef(false)
 
+    // Функция скролла
     const scrollFunction = useCallback((progressTo) => (e) => {
-        progressTo.current -= (e.deltaY / 1000)
+        // Включаем скролл, только если камера почти вернулась на место
+        if(scenes.current[currentScene.current].camera.current.position.z <= 5.1) {
+            progressTo.current -= (e.deltaY / 1000)
+        }
     }, [progressTo]);
 
+    // Функция переключения сцен
     const switchScenes = () => {
         easing.damp(progress, 'current', progressTo.current, 0.6);
         // if (progressTo.current > 1) {
@@ -89,8 +92,32 @@ export default function MainScene(props) {
         }
     }
 
+    // RESIZE
     useEffect(() => {
-        three.invalidate()
+        const handleResize = () => {
+            const newWidth = window.innerWidth;
+            const newHeight = window.innerHeight;
+            setWindowInnerWidth(newWidth);
+            setWindowInnerHeight(newHeight);
+            
+            renderTarget.setSize(newWidth, newHeight);
+            renderTarget2.setSize(newWidth, newHeight);
+            // Обновляем размеры камер в сценах
+            scenes.current.forEach(scene => {
+                scene.camera.current.aspect = newWidth / newHeight;
+                scene.camera.current.updateProjectionMatrix();
+            });
+        };
+    
+        window.addEventListener('resize', handleResize);
+    
+        return () => {
+            window.removeEventListener('resize', handleResize);
+        };
+    }, [renderTarget, renderTarget2, scenes]);
+
+    useEffect(() => {
+        three.invalidate() // подготовили все сцены
         const scrollEventHandler = scrollFunction(progressTo);
         const vs = new VirtualScroll()
         vs.on(scrollEventHandler);
@@ -99,45 +126,48 @@ export default function MainScene(props) {
         }
     }, [scenes.current[0].scene.current, scenes.current[1].scene.current, scenes.current[2].scene.current, windowInnerWidth])
 
-    useFrame(({gl, scene, camera}, delta) => {
-        switchScenes()
-        
-        activeMenu.current === true ? sceneMenuRef.current.visible = true : sceneMenuRef.current.visible = false
-        gl.setRenderTarget(renderTarget)
-        renderSceneRef.current.scene.current.visible = false
-        // scene.visible = false
-        scenes.current[currentScene.current].scene.current.visible = true
-        scenes.current[nextScene.current].scene.current.visible = false
-        // scene.background = bg
-        gl.render(scene, scenes.current[currentScene.current].camera.current)
-        // gl.render(scenes.current[currentScene.current].scene.current, scenes.current[currentScene.current].camera.current)
-
-        gl.setRenderTarget(renderTarget2)
-        renderSceneRef.current.scene.current.visible = false
-        scenes.current[currentScene.current].scene.current.visible = false
-        scenes.current[nextScene.current].scene.current.visible = true
-        gl.render(scene, scenes.current[nextScene.current].camera.current)
-        // gl.render(scenes.current[nextScene.current].scene.current, scenes.current[currentScene.current].camera.current)
-        
-        scenes.current[currentScene.current].scene.current.visible = false
-        scenes.current[nextScene.current].scene.current.visible = false
-        renderSceneRef.current.material.current.uniforms.tex.value = renderTarget.texture
-        renderSceneRef.current.material.current.uniforms.tex2.value = renderTarget2.texture
-        renderSceneRef.current.scene.current.visible = true
-
-        // МОЖНО ЗАКОМЕНТИРОВАТЬ
-        // gl.setRenderTarget(null)
-        // gl.render(scene, camera)
+    useFrame(({gl, scene, camera}, delta) => {       
+        // Рендер сцен, если меню закрыто
+        if(props.activeSceneMenu.current === false) {
+            switchScenes()
+            gl.setRenderTarget(renderTarget)
+            renderSceneRef.current.scene.current.visible = false
+            scenes.current[currentScene.current].scene.current.visible = true
+            scenes.current[nextScene.current].scene.current.visible = false
+            gl.render(scenes.current[currentScene.current].scene.current, scenes.current[currentScene.current].camera.current)
+            
+            gl.setRenderTarget(renderTarget2)
+            renderSceneRef.current.scene.current.visible = false
+            scenes.current[currentScene.current].scene.current.visible = false
+            scenes.current[nextScene.current].scene.current.visible = true
+            gl.render(scenes.current[nextScene.current].scene.current, scenes.current[nextScene.current].camera.current)
+            
+            scenes.current[currentScene.current].scene.current.visible = false
+            scenes.current[nextScene.current].scene.current.visible = false
+            // renderSceneRef.current.material.current.uniforms.tex.value = renderTarget.texture
+            // renderSceneRef.current.material.current.uniforms.tex2.value = renderTarget2.texture
+            sceneMenuRef.current.visible = false
+            renderSceneRef.current.scene.current.visible = true
+    
+            // МОЖНО ЗАКОМЕНТИРОВАТЬ
+            // gl.setRenderTarget(null)
+            
+        } else { //Рендер сцены меню, если меню открыто
+            gl.setRenderTarget(renderTargetMenu)
+            sceneMenuRef.current.visible = true
+            gl.render(sceneMenuRef.current, camera)
+        }
         if (renderSceneRef.current != null) {
-            if (activeMenu.current === true) {
-                easing.damp(scenes.current[currentScene.current].camera.current.position, 'z', 10, 2);
-                easing.damp(scenes.current[nextScene.current].camera.current.position, 'z', 10, 2);
-            } else {
-                easing.damp(scenes.current[currentScene.current].camera.current.position, 'z', 5, 0.5);
-                easing.damp(scenes.current[nextScene.current].camera.current.position, 'z', 5, 0.5);
-            }
             // renderSceneRef.current.material.current.map = renderTarget.texture
             renderSceneRef.current.material.current.progression = progress.current
+        }
+        // Двигаем камеру всех сцен, если открыли меня
+        if (props.activeMenu.current === true) {
+            easing.damp(scenes.current[currentScene.current].camera.current.position, 'z', 10, 2);
+            easing.damp(scenes.current[nextScene.current].camera.current.position, 'z', 10, 2);
+        } else {
+            easing.damp(scenes.current[currentScene.current].camera.current.position, 'z', 5, 0.5);
+            easing.damp(scenes.current[nextScene.current].camera.current.position, 'z', 5, 0.5);
         }
     })
 
@@ -146,15 +176,17 @@ export default function MainScene(props) {
     //     scenes.current[0].scene.current.visible = true
     // })
     return <>
-        <RenderScene ref={renderSceneRef} activeMenu={activeMenu}
+        <RenderScene ref={renderSceneRef}
         renderTarget={renderTarget}
         renderTarget2={renderTarget2}
+        renderTargetMenu={renderTargetMenu}
         progress={progress}
+        activeSceneMenu={props.activeSceneMenu}
         />
         <Scene1 ref={scenes.current[0]} currentScene={currentScene} nextScene={nextScene} progress={progress} scenes={scenes}/>
         <Scene2 ref={scenes.current[1]} currentScene={currentScene} nextScene={nextScene} progress={progress} scenes={scenes}/>
         <Scene3 ref={scenes.current[2]} currentScene={currentScene} nextScene={nextScene} progress={progress} scenes={scenes}/>
-        <SceneMenu ref={sceneMenuRef}/>
+        <SceneMenu ref={sceneMenuRef} activeMenu={props.activeMenu}/>
         <EffectComposer 
         multisampling={0} 
         disableNormalPass={false}
@@ -180,7 +212,7 @@ export default function MainScene(props) {
             kernelSize={KernelSize.LARGE}
             luminanceThreshold={0}
             luminanceSmoothing={0.2}
-            opacity={3}
+            // opacity={3}
             intensity={2}
             />
             <Noise opacity={0.025} />

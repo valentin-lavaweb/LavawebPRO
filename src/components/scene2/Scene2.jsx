@@ -10,7 +10,8 @@ export default forwardRef( function Scene2(props, ref) {
     }, [])
 
     useFrame(({pointer}) => {
-        easing.damp(ref.camera.current.position, 'x', pointer.x * 0.02, 0.2);
+        easing.damp(ref.camera.current.position, 'x', -pointer.x * 0.25, 0.2);
+        easing.damp(ref.camera.current.position, 'y', -pointer.y * 0.25, 0.2);
         ref.camera.current.lookAt(0, 0, 0)
         if (props.currentScene.current === 1) {
           easing.damp(groupRef.current.position, 'y', (props.progress.current - 0) * 2, 0.05);
@@ -21,6 +22,7 @@ export default forwardRef( function Scene2(props, ref) {
 
     return <>
     <scene ref={ref.scene}>
+        <color attach="background" args={["#0000ff"]} />
         <perspectiveCamera {...three.camera} ref={ref.camera}/>
         <group ref={groupRef}>
             <mesh position={[0, 0, 0]}>

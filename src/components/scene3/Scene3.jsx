@@ -21,6 +21,7 @@ export default forwardRef( function Scene3(props, ref) {
 
     return <>
     <scene ref={ref.scene}>
+        <color attach="background" args={["#000000"]} />
         <perspectiveCamera {...three.camera} ref={ref.camera}/>
         <group ref={groupRef}>
             <mesh position={[0, 0, 0]}>

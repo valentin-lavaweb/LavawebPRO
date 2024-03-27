@@ -22,12 +22,10 @@ export default forwardRef( function Scene1(props, ref) {
 
     useFrame(({pointer}) => {
       // console.log(ref.camera.current.aspect)
-      // ref.camera.current.aspect = three.camera.aspect
       easing.damp(ref.camera.current.position, 'x', -pointer.x * 0.25, 0.2);
       easing.damp(ref.camera.current.position, 'y', -pointer.y * 0.25, 0.2);
       ref.camera.current.lookAt(0, 0, 0)
       if (props.currentScene.current === 0) {
-        // console.log(props.progress.current)
         easing.damp(groupRef.current.position, 'y', (props.progress.current - 0) * 1.75, 0.05);
       } else if (props.currentScene.current === props.scenes.current.length - 1) {
         easing.damp(groupRef.current.position, 'y', (props.progress.current - 1) * 1.75, 0.05);
@@ -53,7 +51,7 @@ export default forwardRef( function Scene1(props, ref) {
       return (
         <>
           {material && <Icosahedron
-              scale={1}
+              scale={2}
               args={[1, 8]}
               ref={sphere}
               material={material}
@@ -77,16 +75,15 @@ export default forwardRef( function Scene1(props, ref) {
         ];
 
         // smaller spheres movement
-        useFrame(() => {
-          // animate each sphere in the array
-          sphereRefs.forEach((el) => {
-            el.position.y += 0.02;
-            if (el.position.y > 19) el.position.y = -18;
-            el.rotation.x += 0.06;
-            el.rotation.y += 0.06;
-            el.rotation.z += 0.02;
-          });
-        });
+        // useFrame(() => {
+        //   sphereRefs.forEach((el) => {
+        //     el.position.y += 0.02;
+        //     if (el.position.y > 19) el.position.y = -18;
+        //     el.rotation.x += 0.06;
+        //     el.rotation.y += 0.06;
+        //     el.rotation.z += 0.02;
+        //   });
+        // });
         return (
           <>
             {littleSpheres.map((pos, i) => (
@@ -110,29 +107,21 @@ export default forwardRef( function Scene1(props, ref) {
                 x: -0.41,
                 y: 0.1
             },
-            // {
-            //     x: -0.8,
-            //     y: -0.8
-            // },
             {
                 x: -0.1,
                 y: 0.7
             },
         ]
         useFrame(() => {
-            // animate each sphere in the array
             ringsRefs.forEach((el) => {
-            //   el.position.y += 0.02;
-            //   if (el.position.y > 19) el.position.y = -18;
               el.rotation.x += 0.005;
               el.rotation.y += 0.006;
-            //   el.rotation.z += 0.02;
             });
         });
         return <>
         {rings.map((ring, index) => {
             return (
-            <mesh rotation={[Math.PI * ring.x, Math.PI * ring.y, 0]}scale={0.115} key={`ring$${index}`}
+            <mesh rotation={[Math.PI * ring.x, Math.PI * ring.y, 0]}scale={0.230} key={`ring$${index}`}
             ref={(ringRef) => (ringsRefs[index] = ringRef)}>
                 <torusGeometry args={[10, 0.05, 30, 100, Math.PI * 2]} />
                 <meshBasicMaterial color={[0.6, 0.6, 3]}/>
@@ -143,32 +132,34 @@ export default forwardRef( function Scene1(props, ref) {
     }
 
     const bg = new THREE.TextureLoader().load('/backgrounds/bg1.png')
+    const bgTexture = new THREE.WebGLRenderTarget(three.viewport.width, three.viewport.height);
+    const bgMaterial = new THREE.MeshBasicMaterial({ map: bgTexture.texture });
 
     return <>
     {/* <scene ref={ref.scene} background={bg}> */}
     <scene ref={ref.scene}>
-    {/* <color attach="background" args={["#ff0000"]} /> */}
-        <perspectiveCamera {...three.camera} ref={ref.camera}/>
-        {/* <BackgroundLavaComponent progress={props.progress} currentScene={props.currentScene} scenes={props.scenes}/> */}
-        {/* <BackgroundNew /> */}
-        <MeshDistortMaterial
-            ref={setMaterial}
-            envMap={envMap}
-            bumpMap={bumpMap}
-            color={"#010101"}
-            roughness={0}
-            metalness={1}
-            bumpScale={0.005}
-            clearcoat={1}
-            clearcoatRoughness={1}
-            radius={1}
-            distort={0.35}
-        />
-        <group ref={groupRef}>
-          <Sphere />
-          <LittleSpheres />
-          <Ring />
-        </group>
+      <color attach="background" args={["#000000"]} />
+      <perspectiveCamera {...three.camera} ref={ref.camera}/>
+      {/* <BackgroundLavaComponent progress={props.progress} currentScene={props.currentScene} scenes={props.scenes}/> */}
+      {/* <BackgroundNew /> */}
+      <MeshDistortMaterial
+          ref={setMaterial}
+          envMap={envMap}
+          bumpMap={bumpMap}
+          color={"#010101"}
+          roughness={0}
+          metalness={1}
+          bumpScale={0.005}
+          clearcoat={1}
+          clearcoatRoughness={1}
+          radius={1}
+          distort={0.35}
+      />
+      <group ref={groupRef}>
+        <Sphere />
+        <LittleSpheres />
+        <Ring />
+      </group>
     </scene>
     </>
 })

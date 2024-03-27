@@ -1,0 +1,522 @@
+.header {
+    display: flex;
+    position: relative;
+    align-items: center;
+    position: absolute;
+    right: 50px;
+    top: 50px;
+    color: white;
+    gap: 7px;
+    cursor: pointer;
+    z-index: 2;
+
+    &:hover {
+        .line:nth-child(1), .line:nth-child(3) {
+            width: 65%;
+        }
+    }
+    
+    &.enter, &.enterDone {
+        .headerLines {
+            transform: rotate(90deg);
+            transition: 0.15s 0s;
+        }
+        .line {
+            
+            &:nth-child(1) {
+                transform: translateX(22px);
+                transition: 0.15s 0.2s;
+            }
+            &:nth-child(2) {
+                width: 100%;
+                transform: translateX(-32px);
+                transition: 0.5s 0.1s;
+            }
+            &:nth-child(3) {
+                // width: 100%;
+                transform: translateX(22px);
+                transition: 0.15s 0.2s;
+            }
+        }
+        .crossLine {        
+            &:nth-child(1) {
+                transform: rotate(45deg) translateX(0px);
+                transition: 0.15s 0.55s;
+            }
+            &:nth-child(2) {
+                transform: rotate(-45deg) translateX(0px);
+                transition: 0.15s 0.4s;
+            }
+        }
+    }
+    &.enterDone {
+        &:hover {
+            .crossLine {        
+                &:nth-child(1) {
+                    width: 15px;
+                    transition: 0.1s 0s;
+                }
+                &:nth-child(2) {
+                    width: 15px;
+                    transition: 0.1s 0s;
+                }
+            }
+        }
+        .crossLine {        
+            &:nth-child(1) {
+                transition: 0.1s 0s;
+            }
+            &:nth-child(2) {
+                transition: 0.1s 0s;
+            }
+        }
+    }
+    &.exit {
+        .headerLines {
+            transform: rotate(0deg);
+            transition: 0.15s 0.5s;
+        }
+        .line {
+            &:nth-child(1) {
+                width: 65%;
+                transform: translateX(0px);
+                transition: 0.15s 0.25s;
+            }
+            &:nth-child(2) {
+                width: 100%;
+                transform: translateX(0px);
+                transition: 0.5s 0.2s;
+            }
+            &:nth-child(3) {
+                width: 65%;
+                transform: translateX(0px);
+                transition: 0.15s 0.25s;
+            }
+        }
+        .crossLine {        
+            &:nth-child(1) {
+                transform: rotate(45deg) translateX(30px);
+                transition: 0.15s 0.15s;
+            }
+            &:nth-child(2) {
+                transform: rotate(-45deg) translateX(-30px);
+                transition: 0.15s 0s;
+            }
+        }
+    }
+    &.exitDone {
+        .crossLine {        
+            &:nth-child(1) {
+                transform: rotate(45deg) translateX(-30px);
+                transition: 0s 0s;
+            }
+            &:nth-child(2) {
+                transform: rotate(-45deg) translateX(30px);
+                transition: 0s 0s;
+            }
+        }
+    }
+}
+.headerText {
+    font-family: Jura;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+
+    .spanParent {
+        span {
+            &:first-child {
+                color: rgba(255, 255, 255, 1);
+            }
+            &:last-child {
+                color: rgba(255, 255, 255, 1);
+            }
+        }
+    }
+}
+
+.headerLines, .headerCross {
+    display: flex;
+    position: relative;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 20px;
+    height: 20px;
+    transform: rotate(0deg);
+    overflow: hidden;
+    transition: 0.25s;
+}
+.headerLines {
+    gap: 3px;
+}
+.line {
+    display: flex;
+    position: relative;
+    width: 100%;
+    height: 1px;
+    background-color: white;
+    transition: 0.15s;
+    will-change: transform;
+
+    &:nth-child(1) {
+        
+    }
+    &:nth-child(2) {
+
+    }
+    &:nth-child(3) {
+
+    }
+}
+
+.headerCross {
+    position: absolute;
+    right: 0;
+}
+.crossLine {
+    position: absolute;
+    width: 100%;
+    height: 1px;
+    background-color: white;
+    transform-origin: 50% 50%;
+    transition: 0.15s 0s;
+    will-change: transform;
+
+    &:nth-child(1) {
+        transform: rotate(45deg) translateX(-30px);
+    }
+    &:nth-child(2) {
+        transform: rotate(-45deg) translateX(30px);
+    }
+    &:nth-child(3) {
+        position: absolute;
+        right: -5px;
+        width: 0px;
+        height: 1px;
+        background-color: white;
+    }
+}
+
+.headerMenu {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    font-family: Ubuntu;
+    letter-spacing: 3px;
+    font-size: 40px;
+    font-weight: 300;
+    color: white;
+    position: fixed;
+    right: 0;
+    top: 0;
+    padding: 50px 50px 50px 0px;
+    width: 450px;
+    height: calc(100% - 100px);
+    opacity: 0;
+    pointer-events: none;
+    transition: 2s 0s;
+}
+.headerMenu.active {
+    opacity: 1;
+    pointer-events: auto;
+    transition: 2s 1s;
+    // transform: translateX(calc(0% + 0px));
+}
+
+.headerMenuUl {
+    display: flex;
+    position: relative;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3vh;
+}
+
+.glitchText {
+    display: inline-flex;
+    cursor: pointer;
+    $duration: 0.1s;
+    $value1: 0s;
+    $value2: calc($duration * 0.5);
+    $value3: calc($duration * 1);
+    $value4: calc($duration * 1.5);
+
+    &.active {
+        display: inline-flex;
+
+        // &.instant {
+        //     // ACTIVE ANIMATIONS FOR INSTANT TEXTS
+        //     .spanParent {
+        //         @for $i from 1 through 30 {
+        //             &:nth-child(#{$i}) {
+        //                 @for $j from 1 through 4{
+        //                     span {
+        //                         animation-duration: $duration;
+        //                         animation-timing-function: linear;
+        //                         animation-fill-mode: forwards;
+        //                         animation-direction: normal;
+        //                         animation-iteration-count: 1;
+
+        //                         &:nth-child(1) {
+        //                             animation-name: hideFirst;
+        //                             animation-delay: calc($duration / 2 * #{$i + 1});
+        //                         }
+        //                         &:nth-child(2) {
+        //                             animation-name: showSymbols;
+        //                             animation-play-state: running;
+        //                             animation-delay: calc($duration / 2 * #{$i + 2});
+        //                         }
+        //                         &:nth-child(3) {
+        //                             animation-name: showSymbols;
+        //                             animation-play-state: running;
+        //                             animation-delay: calc($duration / 2 * #{$i + 3});
+        //                         }
+        //                         &:nth-child(4) {
+        //                             animation-name: showLast;
+        //                             animation-delay: calc($duration / 2 * #{$i + 4});
+        //                         }
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+    }
+}
+
+
+
+// STYLES
+.languageParent {
+    display: flex;
+    align-items: center;
+}
+.spanParent {
+    display: flex;
+    position: relative;
+    justify-content: center;
+    align-items: center;
+
+    span {
+        position: absolute;
+        font-family: Tesla;
+        color: rgb(0, 162, 255);
+        text-shadow: 0 0 10px;
+        transform: scale3d(0.65, 1.15, 1) translateY(10%);
+
+        &:first-child, &:last-child {
+            font-family: Ubuntu;
+            text-shadow: unset;
+            transform: none;
+            top: 0px;
+        }
+
+        &:first-child {
+            position: relative;
+        }
+        &:last-child {
+        }
+    }
+}
+
+.languageContent {
+    display: inline-flex;
+    position: relative;
+    opacity: 0;
+    transition: 0s 1.2s;
+
+    &.active {
+        opacity: 1;
+    }
+
+    &:nth-child(2) {
+        left: 0;
+        position: absolute;
+    }
+}
+
+.li {
+    .spanParent {
+        span:first-child {
+            color: rgba(255, 255, 255, 0.3);
+        }
+        span:last-child {
+            color: rgba(255, 255, 255, 1);
+        }
+    }
+}
+
+
+
+.bottomHud {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: fixed;
+    width: calc(100% - 100px);
+    padding: 0px 50px 30px 50px;
+    bottom: 0;
+}
+
+.leftPanel {
+    display: flex;
+    position: relative;
+}
+
+.logoBlock {
+    display: flex;
+    align-items: center;
+    position: relative;
+    gap: 30px;
+}
+
+.logoImage {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    width: 64px;
+    height: 64px;
+    border: 1px solid white;
+    border-radius: 50%;
+    opacity: 0.3;
+
+    img {
+        width: 47px;
+        height: 47px;
+        object-fit: contain;
+    }
+}
+
+.logoText {
+    display: flex;
+    position: relative;
+    color: white;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: default;
+
+    .languageParent {
+        width: 100%;
+    }
+    .spanParent {
+        min-width: 3px;
+        span:first-child {
+            color: rgba(255, 255, 255, 0.3);
+        }
+        span:last-child {
+            color: rgba(255, 255, 255, 0.3);
+        }
+    }
+    .languageContent {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        &.ru {
+            width: 280px;
+        }
+        &.en {
+            width: 228px;
+        }
+    }
+}
+
+.textLine {
+    display: inline-flex;
+}
+
+.rightPanel {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    width: 450px;
+
+    &.active {
+        .socialsBlock {
+            opacity: 1;
+            transition: 2s 1s;
+        }
+    }
+}
+
+.socialsBlock {
+    display: flex;
+    gap: 60px;
+    opacity: 0;
+    transition: 2s 0s;
+}
+
+.socialLi {
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+
+.languagePanel {
+    display: flex;
+    align-items: center;
+    position: relative;
+    gap: 15px;
+}
+
+.lang {
+    display: flex;
+    position: relative;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    &.active {
+        color: rgba(255, 255, 255, 0.95);
+    }
+}
+
+.separator {
+    display: flex;
+    position: relative; 
+    width: 40px;
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.darkFilter {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0);
+    pointer-events: none;
+    transition: 2s;
+
+    &.enterActive {
+        background-color: rgba(0, 0, 0, 1);
+    }
+    &.enterDone {
+        background-color: rgba(0, 0, 0, 0);
+    }
+    &.exitActive {
+        background-color: rgba(0, 0, 0, 1);
+    }
+    &.exitDone {
+        background-color: rgba(0, 0, 0, 0);
+    }
+}
