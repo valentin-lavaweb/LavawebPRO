@@ -10,8 +10,9 @@ export default forwardRef( function SceneMenu(props, ref) {
     return <>
     <scene ref={ref}>
         <color attach="background" args={["#0a0f12"]} />
-        <DigitalBackground activeMenu={props.activeMenu}/>
+        {/* <DigitalBackground activeMenu={props.activeMenu}/> */}
         {/* <pointLight position={[0,0,3]} intensity={10}/> */}
+        
     </scene>
     </>
 })

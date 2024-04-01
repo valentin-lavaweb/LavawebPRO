@@ -1,0 +1,76 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Transparent Glass Shader Example</title>
+</head>
+<body>
+<script type="module">
+
+import * as THREE from 'https://cdn.skypack.dev/three@0.139.2';
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer();
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+const geometry = new THREE.SphereGeometry(1, 32, 32);
+const envMap = new THREE.CubeTextureLoader().load([
+    'https://example.com/posx.jpg', 
+    'https://example.com/negx.jpg',
+    'https://example.com/posy.jpg', 
+    'https://example.com/negy.jpg',
+    'https://example.com/posz.jpg', 
+    'https://example.com/negz.jpg'
+]);
+
+const glassMaterial = new THREE.ShaderMaterial({
+    uniforms: {
+        envMap: { value: envMap },
+        refractionRatio: { value: 0.98 },
+        reflectivity: { value: 0.9 }
+    },
+    vertexShader: \`
+    varying vec3 vWorldPosition;
+    
+    void main() {
+        vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+        vWorldPosition = worldPosition.xyz;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+    \`,
+    fragmentShader: \`
+    uniform samplerCube envMap;
+    uniform float refractionRatio;
+    uniform float reflectivity;
+    varying vec3 vWorldPosition;
+    
+    void main() {
+        vec3 envPosition = normalize(vWorldPosition - cameraPosition);
+        vec3 reflectVec = reflect(envPosition, normal);
+        vec4 reflectedColor = textureCube(envMap, reflectVec);
+        gl_FragColor = mix(vec4(1.0), reflectedColor, reflectivity);
+    }
+    \`,
+    side: THREE.FrontSide,
+    transparent: true
+});
+
+const sphere = new THREE.Mesh(geometry, glassMaterial);
+scene.add(sphere);
+
+camera.position.z = 5;
+
+function animate() {
+    requestAnimationFrame(animate);
+    sphere.rotation.x += 0.01;
+    sphere.rotation.y += 0.01;
+    renderer.render(scene, camera);
+}
+
+animate();
+
+</script>
+</body>
+</html>

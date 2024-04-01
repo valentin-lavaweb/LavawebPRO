@@ -16,6 +16,7 @@ import {
 import { useFrame, useThree } from "@react-three/fiber";
 import { easing } from "maath";
 import RenderScene from "./renderScene/RenderScene.jsx";
+// import WebGPURenderer from 'three/addons/renderers/webgpu/WebGPURenderer.js';
 
 const Scene1 = React.lazy(() => import("./scene1/Scene1.jsx"));
 const Scene2 = React.lazy(() => import("./scene2/Scene2.jsx"));
@@ -24,6 +25,8 @@ const SceneMenu = React.lazy(() => import("./sceneMenu/SceneMenu.jsx"));
 
 export default function MainScene(props) {
     const three = useThree()
+
+    const dpr = useRef(0.1);
     const progressTo = useRef(0.1);
     const progress = useRef(0.1);
     const currentScene = useRef(0)
@@ -58,7 +61,7 @@ export default function MainScene(props) {
     // Функция скролла
     const scrollFunction = useCallback((progressTo) => (e) => {
         // Включаем скролл, только если камера почти вернулась на место
-        if(scenes.current[currentScene.current].camera.current.position.z <= 5.1) {
+        if(scenes.current[currentScene.current].camera.current.position.z <= props.defaultCameraPosition.current) {
             progressTo.current -= (e.deltaY / 1000)
         }
     }, [progressTo]);
@@ -107,6 +110,12 @@ export default function MainScene(props) {
                 scene.camera.current.aspect = newWidth / newHeight;
                 scene.camera.current.updateProjectionMatrix();
             });
+            // Обновляем основную камеру
+            three.camera.aspect = newWidth / newHeight;
+            three.camera.updateProjectionMatrix();
+
+            // Выставляем новый размер рендера
+            three.gl.setSize(newWidth, newHeight);
         };
     
         window.addEventListener('resize', handleResize);
@@ -149,7 +158,7 @@ export default function MainScene(props) {
             sceneMenuRef.current.visible = false
             renderSceneRef.current.scene.current.visible = true
     
-            // МОЖНО ЗАКОМЕНТИРОВАТЬ
+            // МОЖНО ЗАКОМЕНТИРОВАТЬ ЕСЛИ EFFECT COMPOSER ВКЛЮЧЕН.
             // gl.setRenderTarget(null)
             
         } else { //Рендер сцены меню, если меню открыто
@@ -163,11 +172,21 @@ export default function MainScene(props) {
         }
         // Двигаем камеру всех сцен, если открыли меня
         if (props.activeMenu.current === true) {
-            easing.damp(scenes.current[currentScene.current].camera.current.position, 'z', 10, 2);
-            easing.damp(scenes.current[nextScene.current].camera.current.position, 'z', 10, 2);
+            easing.damp(scenes.current[currentScene.current].camera.current.position, 'z', props.defaultCameraPosition * 2, 2);
+            easing.damp(scenes.current[nextScene.current].camera.current.position, 'z', props.defaultCameraPosition * 2, 2);
+            
+            // easing.damp(scenes.current[currentScene.current].camera.current, 'fov', 200, 1);
+            // scenes.current[currentScene.current].camera.current.updateProjectionMatrix();
+            // easing.damp(scenes.current[nextScene.current].camera.current, 'fov', 200, 1);
+            // scenes.current[nextScene.current].camera.current.updateProjectionMatrix();
         } else {
-            easing.damp(scenes.current[currentScene.current].camera.current.position, 'z', 5, 0.5);
-            easing.damp(scenes.current[nextScene.current].camera.current.position, 'z', 5, 0.5);
+            easing.damp(scenes.current[currentScene.current].camera.current.position, 'z', props.defaultCameraPosition.current, 0.5);
+            easing.damp(scenes.current[nextScene.current].camera.current.position, 'z', props.defaultCameraPosition.current, 0.5);
+
+            // easing.damp(scenes.current[currentScene.current].camera.current, 'fov', 75, 0.5);
+            // scenes.current[currentScene.current].camera.current.updateProjectionMatrix();
+            // easing.damp(scenes.current[nextScene.current].camera.current, 'fov', 75, 0.5);
+            // scenes.current[nextScene.current].camera.current.updateProjectionMatrix();
         }
     })
 
@@ -196,21 +215,11 @@ export default function MainScene(props) {
         scene={null}
         // resolutionScale={2}
         >
-            {/* <DepthOfField
-            focusDistance={0}
-            focalLength={0.05}
-            bokehScale={2}
-            // height={300}
-            // width={300}
-            /> */}
-            {/* <BrightnessContrast
-                brightness={0} // brightness. min: -1, max: 1
-            /> */}
             <Bloom
             mipmapBlur
             mipMap={false}
             kernelSize={KernelSize.LARGE}
-            luminanceThreshold={0}
+            luminanceThreshold={1}
             luminanceSmoothing={0.2}
             // opacity={3}
             intensity={2}

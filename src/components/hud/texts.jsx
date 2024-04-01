@@ -6,7 +6,7 @@ export const texts = {
     companyDescription: [
         {
             ru: `Имиджевые и впечатляющие веб-сайты,`,
-            en: `Image and spectacular websites`
+            en: `Image and immersive websites`
         },
         {
             ru: `с использованием передовых технологий.`,

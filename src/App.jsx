@@ -3,7 +3,8 @@ import React, { Suspense, useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import {
   Html,
-  OrbitControls
+  OrbitControls,
+  PerformanceMonitor
 } from "@react-three/drei";
 import { KernelSize } from "postprocessing";
 import MainScene from "./components/MainScene.jsx";
@@ -14,27 +15,34 @@ export default function App() {
   const activeMenu = useRef()
   const activeSceneMenu = useRef()
   const language = useRef()
+  const defaultCameraPosition = useRef(5)
+  const [dpr, setDpr] = useState(1)
 
   useEffect(() => {
-    activeMenu.current = true
-    activeSceneMenu.current = true
-    language.current = 'RU'
+    activeMenu.current = false
+    activeSceneMenu.current = false
+    language.current = 'EN'
   }, [])
 
   return <>
     <Canvas
       camera={{
-        position: [0, 0, 5],
+        position: [0, 0, defaultCameraPosition.current],
         fov: 75
       }}
-      dpr={1}
+      dpr={dpr}
+      // linear={true}
+      // flat={false}
+      // orthographic
       // className={`canvas ${store.activeHeader === false && `dark`}`}
       // scene={null}
+      // antialias={window.devicePixelRatio}
     >
       <color attach="background" args={["#131e25"]} />
+      <PerformanceMonitor onIncline={() => setDpr(2)} />
       {/* <fog color="#131e25" attach="fog" near={8} far={30} /> */}
       <Suspense fallback={<Html center>Loading.</Html>}>
-        <MainScene activeMenu={activeMenu} activeSceneMenu={activeSceneMenu}/>
+        <MainScene activeMenu={activeMenu} activeSceneMenu={activeSceneMenu} defaultCameraPosition={defaultCameraPosition}/>
       </Suspense>
       {/* <OrbitControls /> */}
     
