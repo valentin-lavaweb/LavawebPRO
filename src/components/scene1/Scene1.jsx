@@ -9,6 +9,8 @@ import { motion } from 'framer-motion-3d'
 import Particles from '../../templates/particles/Particles.jsx'
 import MorphParticles from '../../templates/morphParticles/MorphParticles.jsx'
 import GlassModel from '../../templates/glassModel/GlassModel.jsx'
+import TextureParticles from '../../templates/textureParticles/TextureParticles.jsx'
+import MorphCursorParticles from '../../templates/morphCursorParticles/MorphCursorParticles.jsx'
 
 export default forwardRef( function Scene1(props, ref) {
     const three = useThree()
@@ -25,8 +27,8 @@ export default forwardRef( function Scene1(props, ref) {
     }, [])
 
     useFrame(({pointer}) => {
-      easing.damp(ref.camera.current.position, 'x', -pointer.x * 0.25, 0.2);
-      easing.damp(ref.camera.current.position, 'y', -pointer.y * 0.25, 0.2);
+      easing.damp(ref.camera.current.position, 'x', pointer.x * 0.7, 0.2);
+      easing.damp(ref.camera.current.position, 'y', pointer.y * 0.7 + 1, 0.2);
       ref.camera.current.lookAt(0, 0, 0)
       if (props.currentScene.current === 0) {
         easing.damp(groupRef.current.position, 'y', (props.progress.current - 0) * 1.75, 0.05);
@@ -64,7 +66,9 @@ export default forwardRef( function Scene1(props, ref) {
         <PlatformScene /> */}
         {/* <Particles /> */}
         {/* <MorphParticles /> */}
-        <GlassModel />
+        <MorphCursorParticles />
+        {/* <TextureParticles displacementCanvasRef={props.displacementCanvasRef}/> */}
+        {/* <GlassModel /> */}
       </group>
     </scene>
     </>

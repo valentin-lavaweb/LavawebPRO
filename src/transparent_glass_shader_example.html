@@ -31,7 +31,9 @@ const glassMaterial = new THREE.ShaderMaterial({
         refractionRatio: { value: 0.98 },
         reflectivity: { value: 0.9 }
     },
-    vertexShader: \`
+    vertexShader: 
+    /* glsl */
+    `
     varying vec3 vWorldPosition;
     
     void main() {
@@ -39,8 +41,9 @@ const glassMaterial = new THREE.ShaderMaterial({
         vWorldPosition = worldPosition.xyz;
         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
     }
-    \`,
-    fragmentShader: \`
+    `,
+    /* glsl */
+    fragmentShader: `
     uniform samplerCube envMap;
     uniform float refractionRatio;
     uniform float reflectivity;
@@ -52,7 +55,7 @@ const glassMaterial = new THREE.ShaderMaterial({
         vec4 reflectedColor = textureCube(envMap, reflectVec);
         gl_FragColor = mix(vec4(1.0), reflectedColor, reflectivity);
     }
-    \`,
+    `,
     side: THREE.FrontSide,
     transparent: true
 });

@@ -14,6 +14,7 @@ import { useStore } from "./store.jsx";
 export default function App() {
   const activeMenu = useRef()
   const activeSceneMenu = useRef()
+  const displacementCanvasRef = useRef()
   const language = useRef()
   const defaultCameraPosition = useRef(5)
   const [dpr, setDpr] = useState(1)
@@ -38,15 +39,16 @@ export default function App() {
       // scene={null}
       // antialias={window.devicePixelRatio}
     >
-      <color attach="background" args={["#131e25"]} />
-      <PerformanceMonitor onIncline={() => setDpr(2)} />
+      <color attach="background" args={["#000000"]} />
+      {/* <PerformanceMonitor onIncline={() => setDpr(2)} onDecline={() => setDpr(window.devicePixelRatio)} /> */}
       {/* <fog color="#131e25" attach="fog" near={8} far={30} /> */}
       <Suspense fallback={<Html center>Loading.</Html>}>
-        <MainScene activeMenu={activeMenu} activeSceneMenu={activeSceneMenu} defaultCameraPosition={defaultCameraPosition}/>
+        <MainScene activeMenu={activeMenu} activeSceneMenu={activeSceneMenu} defaultCameraPosition={defaultCameraPosition} displacementCanvasRef={displacementCanvasRef}/>
       </Suspense>
-      {/* <OrbitControls /> */}
+      <OrbitControls />
     
     </Canvas>
+    <canvas ref={displacementCanvasRef}></canvas>
     <Hud activeMenu={activeMenu} activeSceneMenu={activeSceneMenu} language={language}/>
 
   </>

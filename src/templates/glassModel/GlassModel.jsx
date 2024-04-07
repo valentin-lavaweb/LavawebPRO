@@ -5,7 +5,7 @@ import fragment from './fragment.glsl'
 import { useLoader, useThree } from '@react-three/fiber'
 import { PMREMGenerator } from 'three';
 import { useControls } from 'leva'
-import { useCubeTexture } from '@react-three/drei'
+import { Text, useCubeTexture } from '@react-three/drei'
 
 export default function GlassModel(props) {
 
@@ -35,7 +35,7 @@ export default function GlassModel(props) {
           step: 0.01
         },
         opacity: {
-          value: 0.05,
+          value: 0.5,
           min: 0,
           max: 1,
           step: 0.01
@@ -50,10 +50,11 @@ export default function GlassModel(props) {
             uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight)},
             uCursor: {value: new THREE.Vector2(0.0, 0.0)},
             uProgress: { value: 0.0 },
-            envMap: { value: envMap },
-            refractionRatio: { value: controls.refractionRatio },
-            reflectivity: { value: controls.reflectivity },
-            opacity: { value: controls.opacity }
+            uEnvMap: { value: envMap },
+            uRefractionRatio: { value: controls.refractionRatio },
+            uReflectivity: { value: controls.reflectivity },
+            uOpacity: { value: controls.opacity },
+            uColor: {value: new THREE.Vector4(0.0, 0.0, 1.0, 1.0)}
         },
         transparent: true,
         // blending: THREE.AdditiveBlending,
@@ -65,13 +66,12 @@ export default function GlassModel(props) {
         <mesh position={[0, 0, 0]} material={glassShader}>
         {/* <mesh position={[0, 0, 0]}> */}
             {/* <meshStandardMaterial envMap={envMap} transparent={true} opacity={0.5} metalness={0.2} roughness={0.0} color="black" emissive="black"/> */}
-            {/* <boxGeometry args={[1, 1, 0.1]}/> */}
-            <sphereGeometry args={[1, 32, 64]}/>
+            <boxGeometry args={[5, 5, 0.1]}/>
+            {/* <sphereGeometry args={[1, 32, 64]}/> */}
         </mesh>
-        <mesh position={[1, 0, -2]}>
-            <boxGeometry />
-            <meshStandardMaterial color="green"/>
-        </mesh>
+        <Text>
+            GGz
+        </Text>
         <ambientLight />
         <directionalLight />
         

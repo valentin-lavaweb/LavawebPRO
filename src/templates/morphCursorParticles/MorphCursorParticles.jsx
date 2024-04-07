@@ -1,14 +1,14 @@
 import * as THREE from 'three'
 import vertex from './vertex.glsl'
 import fragment from './fragment.glsl'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useGLTF } from '@react-three/drei'
 import { useControls } from 'leva'
 import gsap from 'gsap'
 import { useFrame } from '@react-three/fiber'
 import { easing } from 'maath'
 
-export default function MorphParticles(props) {
+export default function MorphCursorParticles(props) {
 
     // Список моделей
     const logoModel = useGLTF('/models/lava_logo.glb')
@@ -16,11 +16,15 @@ export default function MorphParticles(props) {
     const model2 = useGLTF('/models/factory.glb')
 
     const pointsRef = useRef()
+    const secondMeshRef = useRef()
     const currentSceneIndexRef = useRef(0)
     const targetSceneIndexRef = useRef(1)
+    const letGeometrySwapRef = useRef(true);
+    let currentSceneIndex = currentSceneIndexRef.current
+    let targetSceneIndex = targetSceneIndexRef.current
     
     // Партикли
-    const particles =  useMemo(() => {
+    const particles = useMemo(() => {
         // Объект партиклей
         const particles = {
             geometry: new THREE.BufferGeometry(),
@@ -51,23 +55,9 @@ export default function MorphParticles(props) {
             maxCount: 0,
             positions: [],
             sizes: [],
-
-            // Логика анимации, сама анимация работает в useFrame за счёт uProgress
-            morph: () => {
-                // Вычисляем нынешнюю и текущую модели
-                currentSceneIndexRef.current = targetSceneIndexRef.current
-                targetSceneIndexRef.current = (currentSceneIndexRef.current + 1) % particles.models.length
-
-                // Выставляем стартовые точки и точки таргета
-                particles.geometry.attributes.position = particles.positions[currentSceneIndexRef.current]
-                particles.geometry.attributes.aPositionTarget = particles.positions[targetSceneIndexRef.current]
-
-                // Выставляем новый индекс, чтобы понять новые стартовые точки
-                particles.material.uniforms.uProgress.value = 0.0
-
-            },
-
         }
+
+        // console.log(particles.models[0])
         
         // Получаем positions из атрибутов геометрий всех моделей.
         const positions = particles.models.map((model) => {
@@ -133,24 +123,93 @@ export default function MorphParticles(props) {
         particles.geometry.setAttribute('aSize', new THREE.BufferAttribute(sizesArray, 1)) //Размер партиклей
     
         // Делаем это для того, чтобы улучшить оптимизацию, необязательно, надо узнать в chatGPT зачем это нужно.
-        // particles.geometry.setIndex(null)
+        particles.geometry.setIndex(null)
+        particles.geometry.deleteAttribute('normal')
 
         return particles
     }, []) // в [] добавляем переменную, которую хотим затестить с помощью useControls.
 
+    // Вычисляем геометрию
+    const swapGeometry = () => {
+        // Меняем геометрию на нужную для корректной смены геометрии
+        particles.geometry.attributes.position = particles.positions[(currentSceneIndex + 1) % particles.models.length]
+        particles.geometry.attributes.aPositionTarget = particles.positions[(targetSceneIndex + 1) % particles.models.length]
+
+        // Вычисляем размеры нынешней модели
+        particles.geometry.computeBoundingBox();
+        const boundingBox = particles.geometry.boundingBox;
+    
+        // Вычисляем размеры для BoxGeometry
+        const size = new THREE.Vector3();
+        boundingBox.getSize(size);
+    
+        // Создаём и обновляем геометрию второстепенного меша
+        const newGeometry = new THREE.BoxGeometry(size.x, size.y, size.z);
+        secondMeshRef.current.geometry.dispose(); // Освобождаем ресурсы старой геометрии
+        secondMeshRef.current.geometry = newGeometry;
+
+        // Возвращаем геометрию
+        particles.geometry.attributes.position = particles.positions[currentSceneIndex]
+        particles.geometry.attributes.aPositionTarget = particles.positions[targetSceneIndex]
+        
+        // Запрещаем выполнение функции
+        letGeometrySwapRef.current = false
+
+        return newGeometry
+    }
+
+    // Меняем сцену
+    const changeSceneIndex = () => {
+        // Вычисляем нынешнюю и текущую модели
+        currentSceneIndex = targetSceneIndex
+        targetSceneIndex = (currentSceneIndex + 1) % particles.models.length
+
+        // Выставляем стартовые точки и точки таргета
+        particles.geometry.attributes.position = particles.positions[currentSceneIndex]
+        particles.geometry.attributes.aPositionTarget = particles.positions[targetSceneIndex]
+
+        // Выставляем новый индекс, чтобы понять новые стартовые точки
+        particles.material.uniforms.uProgress.value = 0.0
+
+        // Разрешаем смену геометрии
+        letGeometrySwapRef.current = true
+    }
+
     // Анимация
     useFrame((renderer, delta)=> {
         particles.material.uniforms.uTime.value += delta
+        particles.material.uniforms.uCursor.value.x = renderer.pointer.x
+        particles.material.uniforms.uCursor.value.y = renderer.pointer.y
         // particles.material.uniforms.uTime.value = particles.material.uniforms.uTime.value % 1.05
 
         easing.damp(particles.material.uniforms.uProgress, 'value', 1.0, 0.5)
+
+        // Меняем вторичную геометрию
+        if (particles.material.uniforms.uProgress.value >= 0.45 && particles.material.uniforms.uProgress.value <= 0.55 && letGeometrySwapRef.current === true) {
+            // swapGeometry()
+        }
+
+        // Меняем индекс сцены для анимации
         if (particles.material.uniforms.uProgress.value === 1) {
-            particles.morph()
+            changeSceneIndex()
         }
     })
 
     return <>
-    <points geometry={particles.geometry} material={particles.material} ref={pointsRef}/>
+    <points geometry={particles.geometry} material={particles.material} ref={pointsRef}
+    // onPointerMove={(e) => {
+    //     // console.log(e);
+    // }}
+    />
+    <mesh
+        ref={secondMeshRef}
+        onPointerMove={(e) => {
+            // console.log(e);
+        }}
+        geometry={particles.models[0].scene.children[0].geometry}
+        >
+        <meshBasicMaterial transparent={false} opacity={1} depthWrite={false} depthTest={true}/>
+    </mesh>
     <ambientLight />
     {/* <directionalLight /> */}
     </>
