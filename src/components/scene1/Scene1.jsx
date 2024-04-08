@@ -66,8 +66,8 @@ export default forwardRef( function Scene1(props, ref) {
         <PlatformScene /> */}
         {/* <Particles /> */}
         {/* <MorphParticles /> */}
-        <MorphCursorParticles />
-        {/* <TextureParticles displacementCanvasRef={props.displacementCanvasRef}/> */}
+        {/* <MorphCursorParticles /> */}
+        <TextureParticles displacementCanvasRef={props.displacementCanvasRef}/>
         {/* <GlassModel /> */}
       </group>
     </scene>

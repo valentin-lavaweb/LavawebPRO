@@ -13,9 +13,11 @@ export default function MorphCursorParticles(props) {
     // Список моделей
     const logoModel = useGLTF('/models/lava_logo.glb')
     const model1 = useGLTF('/models/earth.glb')
-    const model2 = useGLTF('/models/factory.glb')
+    const model2 = useGLTF('/models/crane.glb')
+    // console.log(model2);
 
     const pointsRef = useRef()
+    const cursorPosRef = useRef(new THREE.Vector2(0.0, 0.0))
     const secondMeshRef = useRef()
     const currentSceneIndexRef = useRef(0)
     const targetSceneIndexRef = useRef(1)
@@ -42,6 +44,11 @@ export default function MorphCursorParticles(props) {
                     uProgress: {value: 0.0},
                     uDuration: {value: 0.5}, 
                     uFrequency: {value: 3.5},
+                    uMoveIntensity: {value: 1.0},
+                    uRadius: {value: 0.75},
+                    uMinDistance: {value: 1.0},
+                    uGeometryWidth: {value: 1.0},
+                    uGeometryHeight: {value: 1.0},
                 },
                 // transparent: true,
                 blending: THREE.AdditiveBlending,
@@ -50,14 +57,12 @@ export default function MorphCursorParticles(props) {
             models: [
                 logoModel,
                 model1,
-                model2
+                model2,
             ],
             maxCount: 0,
             positions: [],
             sizes: [],
         }
-
-        // console.log(particles.models[0])
         
         // Получаем positions из атрибутов геометрий всех моделей.
         const positions = particles.models.map((model) => {
@@ -113,14 +118,24 @@ export default function MorphCursorParticles(props) {
                     // newArray[i3 + 2] = (Math.random() - 0.5) * 8 // position.Z
                 }
             }
+
             // засовываем в наш массив с позициями новые массивы с новыми позициями
             particles.positions.push(new THREE.Float32BufferAttribute(newArray, 3)) //берём число 3, потому что у каждого партикля есть xyz
+        }
+
+        // Генерация случайных направлений
+        const directionsArray = new Float32Array(particles.maxCount * 3);
+        for (let i = 0; i < particles.maxCount; i++) {
+            directionsArray[i * 3] = Math.random() * 2 - 1; // X
+            directionsArray[i * 3 + 1] = Math.random() * 2 - 1; // Y
+            directionsArray[i * 3 + 2] = Math.random() * 2 - 1; // Z
         }
 
         // Добавляем атрибут позиций, т.е. выставляем нашим партиклям новые позиции
         particles.geometry.setAttribute('position', particles.positions[0]) //Стартовая форма
         particles.geometry.setAttribute('aPositionTarget', particles.positions[1]) //Конечная форма
         particles.geometry.setAttribute('aSize', new THREE.BufferAttribute(sizesArray, 1)) //Размер партиклей
+        particles.geometry.setAttribute('aDirection', new THREE.BufferAttribute(directionsArray, 3)); //Рандомное направление
     
         // Делаем это для того, чтобы улучшить оптимизацию, необязательно, надо узнать в chatGPT зачем это нужно.
         particles.geometry.setIndex(null)
@@ -142,6 +157,11 @@ export default function MorphCursorParticles(props) {
         // Вычисляем размеры для BoxGeometry
         const size = new THREE.Vector3();
         boundingBox.getSize(size);
+
+        // Вычисляем центр BoxGeometry и применяем к вторичной геометрии
+        const center = new THREE.Vector3();
+        boundingBox.getCenter(center);
+        secondMeshRef.current.position.set(center.x, center.y, center.z);
     
         // Создаём и обновляем геометрию второстепенного меша
         const newGeometry = new THREE.BoxGeometry(size.x, size.y, size.z);
@@ -151,11 +171,13 @@ export default function MorphCursorParticles(props) {
         // Возвращаем геометрию
         particles.geometry.attributes.position = particles.positions[currentSceneIndex]
         particles.geometry.attributes.aPositionTarget = particles.positions[targetSceneIndex]
+
+        // Меняем uniforms
+        particles.material.uniforms.uGeometryWidth.value = size.x;
+        particles.material.uniforms.uGeometryHeight.value = size.y;
         
         // Запрещаем выполнение функции
         letGeometrySwapRef.current = false
-
-        return newGeometry
     }
 
     // Меняем сцену
@@ -175,18 +197,44 @@ export default function MorphCursorParticles(props) {
         letGeometrySwapRef.current = true
     }
 
+    // Применяем геометрию к вторичному мешу в самом начале
+    useEffect(() => {
+        // Вычисляем размеры нынешней модели
+        particles.geometry.computeBoundingBox();
+        const boundingBox = particles.geometry.boundingBox;
+    
+        // Вычисляем размеры для BoxGeometry
+        const size = new THREE.Vector3();
+        boundingBox.getSize(size);
+
+        // Вычисляем центр BoxGeometry и применяем к вторичной геометрии
+        const center = new THREE.Vector3();
+        boundingBox.getCenter(center);
+        secondMeshRef.current.position.set(center.x, center.y, center.z);
+    
+        // Создаём и обновляем геометрию второстепенного меша
+        const newGeometry = new THREE.PlaneGeometry(size.x, size.y);
+        secondMeshRef.current.geometry = newGeometry;
+        
+        // Передаём uniforms
+        particles.material.uniforms.uGeometryWidth.value = size.x;
+        particles.material.uniforms.uGeometryHeight.value = size.y;
+        
+    }, [])
+
     // Анимация
     useFrame((renderer, delta)=> {
+        // console.log(particles.material.uniforms.uGeometryWidth.value);
         particles.material.uniforms.uTime.value += delta
-        particles.material.uniforms.uCursor.value.x = renderer.pointer.x
-        particles.material.uniforms.uCursor.value.y = renderer.pointer.y
+        particles.material.uniforms.uCursor.value = cursorPosRef.current;
         // particles.material.uniforms.uTime.value = particles.material.uniforms.uTime.value % 1.05
 
+        // АНИМАЦИЯ СМЕНЫ ОБЪЕКТОВ
         easing.damp(particles.material.uniforms.uProgress, 'value', 1.0, 0.5)
 
         // Меняем вторичную геометрию
         if (particles.material.uniforms.uProgress.value >= 0.45 && particles.material.uniforms.uProgress.value <= 0.55 && letGeometrySwapRef.current === true) {
-            // swapGeometry()
+            swapGeometry()
         }
 
         // Меняем индекс сцены для анимации
@@ -196,19 +244,14 @@ export default function MorphCursorParticles(props) {
     })
 
     return <>
-    <points geometry={particles.geometry} material={particles.material} ref={pointsRef}
-    // onPointerMove={(e) => {
-    //     // console.log(e);
-    // }}
-    />
+    <points geometry={particles.geometry} material={particles.material} ref={pointsRef} />
     <mesh
         ref={secondMeshRef}
         onPointerMove={(e) => {
-            // console.log(e);
+            cursorPosRef.current = [(e.uv.x - 0.5) * 2, (e.uv.y - 0.5) * 2]; // Получаем позицию курсора в пространстве сцены
         }}
-        geometry={particles.models[0].scene.children[0].geometry}
         >
-        <meshBasicMaterial transparent={false} opacity={1} depthWrite={false} depthTest={true}/>
+        <meshBasicMaterial visible={false} transparent={true} opacity={0.15}/>
     </mesh>
     <ambientLight />
     {/* <directionalLight /> */}

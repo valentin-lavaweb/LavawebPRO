@@ -136,69 +136,69 @@ export default function MainScene(props) {
     }, [scenes.current[0].scene.current, scenes.current[1].scene.current, scenes.current[2].scene.current, windowInnerWidth])
 
     // РЕНДЕРЕР
-    // useFrame(({gl, scene, camera}, delta) => {       
-    //     // Рендер сцен, если меню закрыто
-    //     if(props.activeSceneMenu.current === false) {
-    //         switchScenes()
-    //         gl.setRenderTarget(renderTarget)
-    //         renderSceneRef.current.scene.current.visible = false
-    //         scenes.current[currentScene.current].scene.current.visible = true
-    //         scenes.current[nextScene.current].scene.current.visible = false
-    //         gl.render(scenes.current[currentScene.current].scene.current, scenes.current[currentScene.current].camera.current)
+    useFrame(({gl, scene, camera}, delta) => {       
+        // Рендер сцен, если меню закрыто
+        if(props.activeSceneMenu.current === false) {
+            switchScenes()
+            gl.setRenderTarget(renderTarget)
+            renderSceneRef.current.scene.current.visible = false
+            scenes.current[currentScene.current].scene.current.visible = true
+            scenes.current[nextScene.current].scene.current.visible = false
+            gl.render(scenes.current[currentScene.current].scene.current, scenes.current[currentScene.current].camera.current)
             
-    //         gl.setRenderTarget(renderTarget2)
-    //         renderSceneRef.current.scene.current.visible = false
-    //         scenes.current[currentScene.current].scene.current.visible = false
-    //         scenes.current[nextScene.current].scene.current.visible = true
-    //         gl.render(scenes.current[nextScene.current].scene.current, scenes.current[nextScene.current].camera.current)
+            gl.setRenderTarget(renderTarget2)
+            renderSceneRef.current.scene.current.visible = false
+            scenes.current[currentScene.current].scene.current.visible = false
+            scenes.current[nextScene.current].scene.current.visible = true
+            gl.render(scenes.current[nextScene.current].scene.current, scenes.current[nextScene.current].camera.current)
             
-    //         scenes.current[currentScene.current].scene.current.visible = false
-    //         scenes.current[nextScene.current].scene.current.visible = false
-    //         // renderSceneRef.current.material.current.uniforms.tex.value = renderTarget.texture
-    //         // renderSceneRef.current.material.current.uniforms.tex2.value = renderTarget2.texture
-    //         sceneMenuRef.current.visible = false
-    //         renderSceneRef.current.scene.current.visible = true
+            scenes.current[currentScene.current].scene.current.visible = false
+            scenes.current[nextScene.current].scene.current.visible = false
+            // renderSceneRef.current.material.current.uniforms.tex.value = renderTarget.texture
+            // renderSceneRef.current.material.current.uniforms.tex2.value = renderTarget2.texture
+            sceneMenuRef.current.visible = false
+            renderSceneRef.current.scene.current.visible = true
     
-    //         // МОЖНО ЗАКОМЕНТИРОВАТЬ ЕСЛИ EFFECT COMPOSER ВКЛЮЧЕН.
-    //         gl.setRenderTarget(null)
+            // МОЖНО ЗАКОМЕНТИРОВАТЬ ЕСЛИ EFFECT COMPOSER ВКЛЮЧЕН.
+            gl.setRenderTarget(null)
 
-    //     } else { //Рендер сцены меню, если меню открыто
-    //         gl.setRenderTarget(renderTargetMenu)
-    //         sceneMenuRef.current.visible = true
-    //         gl.render(sceneMenuRef.current, camera)
+        } else { //Рендер сцены меню, если меню открыто
+            gl.setRenderTarget(renderTargetMenu)
+            sceneMenuRef.current.visible = true
+            gl.render(sceneMenuRef.current, camera)
 
-    //         // МОЖНО ЗАКОМЕНТИРОВАТЬ ЕСЛИ EFFECT COMPOSER ВКЛЮЧЕН.
-    //         gl.setRenderTarget(null)
-    //     }
-    //     if (renderSceneRef.current != null) {
-    //         // renderSceneRef.current.material.current.map = renderTarget.texture
-    //         renderSceneRef.current.material.current.progression = progress.current
-    //     }
+            // МОЖНО ЗАКОМЕНТИРОВАТЬ ЕСЛИ EFFECT COMPOSER ВКЛЮЧЕН.
+            gl.setRenderTarget(null)
+        }
+        if (renderSceneRef.current != null) {
+            // renderSceneRef.current.material.current.map = renderTarget.texture
+            renderSceneRef.current.material.current.progression = progress.current
+        }
 
-    //     // Двигаем камеру всех сцен, если открыли меня
-    //     if (props.activeMenu.current === true) {
-    //         easing.damp(scenes.current[currentScene.current].camera.current.position, 'z', props.defaultCameraPosition.current * 2, 2);
-    //         easing.damp(scenes.current[nextScene.current].camera.current.position, 'z', props.defaultCameraPosition.current * 2, 2);
+        // Двигаем камеру всех сцен, если открыли меня
+        if (props.activeMenu.current === true) {
+            easing.damp(scenes.current[currentScene.current].camera.current.position, 'z', props.defaultCameraPosition.current * 2, 2);
+            easing.damp(scenes.current[nextScene.current].camera.current.position, 'z', props.defaultCameraPosition.current * 2, 2);
             
-    //         // easing.damp(scenes.current[currentScene.current].camera.current, 'fov', 200, 1);
-    //         // scenes.current[currentScene.current].camera.current.updateProjectionMatrix();
-    //         // easing.damp(scenes.current[nextScene.current].camera.current, 'fov', 200, 1);
-    //         // scenes.current[nextScene.current].camera.current.updateProjectionMatrix();
-    //     } else {
-    //         easing.damp(scenes.current[currentScene.current].camera.current.position, 'z', props.defaultCameraPosition.current, 0.5);
-    //         easing.damp(scenes.current[nextScene.current].camera.current.position, 'z', props.defaultCameraPosition.current, 0.5);
+            // easing.damp(scenes.current[currentScene.current].camera.current, 'fov', 200, 1);
+            // scenes.current[currentScene.current].camera.current.updateProjectionMatrix();
+            // easing.damp(scenes.current[nextScene.current].camera.current, 'fov', 200, 1);
+            // scenes.current[nextScene.current].camera.current.updateProjectionMatrix();
+        } else {
+            easing.damp(scenes.current[currentScene.current].camera.current.position, 'z', props.defaultCameraPosition.current, 0.5);
+            easing.damp(scenes.current[nextScene.current].camera.current.position, 'z', props.defaultCameraPosition.current, 0.5);
 
-    //         // easing.damp(scenes.current[currentScene.current].camera.current, 'fov', 75, 0.5);
-    //         // scenes.current[currentScene.current].camera.current.updateProjectionMatrix();
-    //         // easing.damp(scenes.current[nextScene.current].camera.current, 'fov', 75, 0.5);
-    //         // scenes.current[nextScene.current].camera.current.updateProjectionMatrix();
-    //     }
-    // })
-
-    useFrame(({scene}) =>{
-        // scene.background = bg
-        scenes.current[0].scene.current.visible = true
+            // easing.damp(scenes.current[currentScene.current].camera.current, 'fov', 75, 0.5);
+            // scenes.current[currentScene.current].camera.current.updateProjectionMatrix();
+            // easing.damp(scenes.current[nextScene.current].camera.current, 'fov', 75, 0.5);
+            // scenes.current[nextScene.current].camera.current.updateProjectionMatrix();
+        }
     })
+
+    // useFrame(({scene}) =>{
+    //     // scene.background = bg
+    //     scenes.current[0].scene.current.visible = true
+    // })
     return <>
         <RenderScene ref={renderSceneRef}
         renderTarget={renderTarget}
