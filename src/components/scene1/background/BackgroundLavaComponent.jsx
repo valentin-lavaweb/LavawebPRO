@@ -45,7 +45,7 @@ export default function BackgroundLavaComponent(props) {
             vec3 pos = position;
 
             // Применяем параболическую функцию к координате Y каждой вершины
-            pos.z -= pow(position.x, 2.0) * -0.05;
+            // pos.z -= pow(position.x, 2.0) * -0.05;
             
             vec2 center = vec2(0.5);
             vec2 liquidScaleXY = vec2(uLiquidScale, uLiquidScale);
@@ -75,8 +75,8 @@ export default function BackgroundLavaComponent(props) {
             // gl_Position = projectedPosition;
             // gl_Position = projectionMatrix * modelViewMatrix * vec4( position.x, position.y, position.z, 1.0 );
             // gl_Position = vec4( position.x, position.y, position.z, 1.0 );
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-            // gl_Position = vec4( pos, 1.0 );  
+            // gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+            gl_Position = vec4( pos, 1.0 );  
         }`
         ,
         
@@ -130,9 +130,9 @@ export default function BackgroundLavaComponent(props) {
 
 
     return <>
-    <mesh ref={lavaMesh} position={[0, 0, -1]} rotation={[0, 0, 0]} scale={4.2}>
+    <mesh ref={lavaMesh} position={[0, 0, -1]} rotation={[0, 0, 0]} scale={1.5}>
         {/* <planeGeometry args={[three.viewport.width, three.viewport.height, 20, 20]}/> */}
-        <planeGeometry args={[three.viewport.width, three.viewport.height]}/>
+        <planeGeometry args={[2, 2]}/>
         <lavaMaterial ref={materialRef}/>
     </mesh>
     </>

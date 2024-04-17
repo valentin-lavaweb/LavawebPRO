@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { useFrame, useThree } from "@react-three/fiber"
 import { forwardRef, useEffect, useMemo, useRef, useState } from "react"
-import BackgroundLavaComponent from "./background/BackgroundLavaComponent"
+import BackgroundLavaComponent from "./background/BackgroundLavaComponent.jsx"
 import { Icosahedron, MeshDistortMaterial, shaderMaterial, useCubeTexture, useTexture } from "@react-three/drei"
 import { easing } from 'maath'
 import { useControls } from 'leva'
@@ -14,12 +14,12 @@ import MorphCursorParticles from '../../templates/morphCursorParticles/MorphCurs
 
 export default forwardRef( function Scene1(props, ref) {
     const three = useThree()
+    const cursorWorldPositionRef = useRef(new THREE.Vector3(999.0, 999.0, 999.0))
     const bumpMap = useTexture("/bump.jpg");
     const envMap = useCubeTexture(
       ["px.png", "nx.png", "py.png", "ny.png", "pz.png", "nz.png"],
       { path: "/cube/" }
     );
-    const [material, setMaterial] = useState();
     const groupRef = useRef()
 
     useEffect(() => {
@@ -42,8 +42,14 @@ export default forwardRef( function Scene1(props, ref) {
 
     return <>
     {/* <scene ref={ref.scene} background={bg}> */}
-    <scene ref={ref.scene}>
-      <color attach="background" args={["#030d15"]} />
+    <scene ref={ref.scene}
+      // onPointerMove={(e) => {
+      //   e.stopPropagation();
+      //   const pointer = e.point; // Мировые координаты точки, на которую указывает курсор
+      //   cursorWorldPositionRef.current.copy(pointer); // Сохраняем мировые координаты в useRef
+      // }}
+    >
+      <color attach="background" args={["#181c20"]} />
       <perspectiveCamera {...three.camera} ref={ref.camera}/>
       {/* <BackgroundLavaComponent progress={props.progress} currentScene={props.currentScene} scenes={props.scenes}/> */}
       {/* <MeshDistortMaterial
@@ -60,14 +66,10 @@ export default forwardRef( function Scene1(props, ref) {
           distort={0.35}
       /> */}
       <group ref={groupRef}>
-        {/* <Sphere />
-        <LittleSpheres />
-        <Rings />
-        <PlatformScene /> */}
         {/* <Particles /> */}
+        <TextureParticles displacementCanvasRef={props.displacementCanvasRef}/>
         {/* <MorphParticles /> */}
         {/* <MorphCursorParticles /> */}
-        <TextureParticles displacementCanvasRef={props.displacementCanvasRef}/>
         {/* <GlassModel /> */}
       </group>
     </scene>

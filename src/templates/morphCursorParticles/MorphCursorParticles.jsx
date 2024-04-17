@@ -2,28 +2,64 @@ import * as THREE from 'three'
 import vertex from './vertex.glsl'
 import fragment from './fragment.glsl'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useGLTF } from '@react-three/drei'
+import { Detailed, useGLTF } from '@react-three/drei'
 import { useControls } from 'leva'
 import gsap from 'gsap'
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useLoader, useThree } from '@react-three/fiber'
 import { easing } from 'maath'
+import DisplacementMesh from './displacementMesh/DisplacementMesh'
+import { log } from 'three/examples/jsm/nodes/Nodes.js'
 
 export default function MorphCursorParticles(props) {
 
+    const {gl} = useThree()
+
     // Список моделей
-    const logoModel = useGLTF('/models/lava_logo.glb')
-    const model1 = useGLTF('/models/earth.glb')
-    const model2 = useGLTF('/models/crane.glb')
-    // console.log(model2);
+    const model1 = useGLTF('/models/iconMain.glb')
+    const model2 = useGLTF('/models/iconPortfolio.glb')
+    const model3 = useGLTF('/models/iconServices.glb')
+    const model4 = useGLTF('/models/iconContacts.glb')
+    const simpleModel1 = useGLTF('/models/displacementMenu.glb')
+
+    // Использовать это, если хотим подключить несколько разных displacement
+    // const simpleModel2 = useGLTF('/models/displacementMenu.glb')
+    // const simpleModel3 = useGLTF('/models/displacementMenu.glb')
+    // const simpleModel4 = useGLTF('/models/displacementMenu.glb')
 
     const pointsRef = useRef()
-    const cursorPosRef = useRef(new THREE.Vector2(0.0, 0.0))
-    const secondMeshRef = useRef()
+    const cursorWorldPositionRef = useRef(new THREE.Vector3());
+
+    const cursorMeshRef = useRef()
+    const prevCursorMeshRef = useRef()
+
+    const cursorPathLength = 31; // Длина пути курсора, которую мы хотим сохранить
+    const cursorPath = useRef(new Array(cursorPathLength).fill(new THREE.Vector3()))
+    function updateCursorPath(cursorPosition) {
+        cursorPath.current.pop(); // Удаляем самую старую позицию
+        cursorPath.current.unshift(cursorPosition.clone()); // Добавляем текущую позицию в начало массива
+    }
+
+    const displacementMeshRef = useRef()
     const currentSceneIndexRef = useRef(0)
     const targetSceneIndexRef = useRef(1)
     const letGeometrySwapRef = useRef(true);
     let currentSceneIndex = currentSceneIndexRef.current
     let targetSceneIndex = targetSceneIndexRef.current
+
+    // const controls = useControls('controls', {
+    //     uSpreadIntensity: {
+    //         value: 3.0,
+    //         min: 0.0,
+    //         max: 3.0,
+    //         step: 0.01
+    //     },
+    //     uCursorRadius: {
+    //         value: 0.11,
+    //         min: 0.0,
+    //         max: 3.0,
+    //         step: 0.01
+    //     },
+    // })
     
     // Партикли
     const particles = useMemo(() => {
@@ -35,34 +71,46 @@ export default function MorphCursorParticles(props) {
                 fragmentShader: fragment,
                 uniforms: {
                     uTime: {value: 0.0},
+                    uResolution: {value: new THREE.Vector2(window.innerWidth, window.innerHeight)},
+
                     uColor: {value: new THREE.Vector3(1.0, 1.0, 8.0)}, //Не рекомендую увеличивать значения цвета, лучше работать с uBrightness для яркости, эффект такой же
-                    uSize: {value: 0.03}, //Влияет на размер свечения партиклей, сильно жрёт ФПС при больших значениях
-                    uBrightness: {value: 1.0}, //Влияет на яркость партиклей, не жрёт ФПС.
+                    uSize: {value: 0.015}, //Влияет на размер свечения партиклей, сильно жрёт ФПС при больших значениях
+                    uBrightness: {value: 2.0}, //Влияет на яркость партиклей, не жрёт ФПС.
                     uBlur: {value: 0.01}, //Влияет на блюр партиклей, не жрёт фпс
-                    uResolution: {value: new THREE.Vector2(window.innerWidth, window.innerHeight)} ,
-                    uCursor: {value: new THREE.Vector2(0.0, 0.0)},
-                    uProgress: {value: 0.0},
                     uDuration: {value: 0.5}, 
-                    uFrequency: {value: 3.5},
-                    uMoveIntensity: {value: 1.0},
-                    uRadius: {value: 0.75},
-                    uMinDistance: {value: 1.0},
-                    uGeometryWidth: {value: 1.0},
-                    uGeometryHeight: {value: 1.0},
+                    uFrequency: {value: 7.5},
+                    uProgress: {value: 0.0},
+                    
+                    uCursor: {value: new THREE.Vector3(0.0, 0.0, 0.0)},
+                    uPrevCursor: { value: new THREE.Vector3(0.0, 0.0, 0.0) },
+                    uCursorRadius: {value: 0.11},
+                    uSpreadIntensity: {value: 3.0},
+                    uAlpha: { value: 0.0 },
+                    uCursorPath: { value: new THREE.Vector3(cursorPath.current) },
+                    uCursorPathLength: { value: 31.0 },
                 },
                 // transparent: true,
                 blending: THREE.AdditiveBlending,
                 depthWrite: false
             }),
             models: [
-                logoModel,
                 model1,
                 model2,
+                model3,
+                model4,
+            ],
+            simpleModels: [
+                simpleModel1,
+                // simpleModel2,
+                // simpleModel3,
+                // simpleModel4,
             ],
             maxCount: 0,
             positions: [],
             sizes: [],
         }
+
+        particles.material.uniforms.uTimeSinceInteraction = new Float32Array(particles.maxCount).fill(-1.0)
         
         // Получаем positions из атрибутов геометрий всех моделей.
         const positions = particles.models.map((model) => {
@@ -90,9 +138,7 @@ export default function MorphCursorParticles(props) {
         // Выставляем новые позиции для новых партиклей и берём старые позиции уже существующих партиклей.        
         for(const position of positions) {    
             const originalArray = position.array // массив стандартных позиций всех моделей.
-            const newArray = new Float32Array(particles.maxCount * 3) // массив, в котором будут новые позиции(*3) партиклей для каждой модели.
-            
-
+            const newArray = new Float32Array(particles.maxCount * 3) // массив, в котором будут новые позиции(*3) партиклей для каждой модели.         
 
             // Создаём новые партикли и новые позиции для них.
             for (let i = 0; i < particles.maxCount; i++) {
@@ -111,11 +157,6 @@ export default function MorphCursorParticles(props) {
                     newArray[i3 + 0] = originalArray[randomIndex + 0] // position.X
                     newArray[i3 + 1] = originalArray[randomIndex + 1] // position.Y
                     newArray[i3 + 2] = originalArray[randomIndex + 2] // position.Z
-
-                    // Распределяем позиции новых партиклей рандомно вокруг сцены
-                    // newArray[i3 + 0] = (Math.random() - 0.5) * 8 // position.X
-                    // newArray[i3 + 1] = (Math.random() - 0.5) * 8 // position.Y
-                    // newArray[i3 + 2] = (Math.random() - 0.5) * 8 // position.Z
                 }
             }
 
@@ -126,132 +167,164 @@ export default function MorphCursorParticles(props) {
         // Генерация случайных направлений
         const directionsArray = new Float32Array(particles.maxCount * 3);
         for (let i = 0; i < particles.maxCount; i++) {
-            directionsArray[i * 3] = Math.random() * 2 - 1; // X
-            directionsArray[i * 3 + 1] = Math.random() * 2 - 1; // Y
-            directionsArray[i * 3 + 2] = Math.random() * 2 - 1; // Z
+            directionsArray[i * 3] = Math.random() * 4 - 2; // X
+            directionsArray[i * 3 + 1] = Math.random() * 4 - 2; // Y
+            directionsArray[i * 3 + 2] = Math.random() * 4 - 2; // Z
         }
 
+        // Улучшаем рандом
+        const randoms = new Float32Array(particles.maxCount * 3);
+        for (let i = 0; i < particles.maxCount; i++) {
+            randoms[i] = Math.random() * 2 - 1;
+        }
+        
         // Добавляем атрибут позиций, т.е. выставляем нашим партиклям новые позиции
         particles.geometry.setAttribute('position', particles.positions[0]) //Стартовая форма
         particles.geometry.setAttribute('aPositionTarget', particles.positions[1]) //Конечная форма
         particles.geometry.setAttribute('aSize', new THREE.BufferAttribute(sizesArray, 1)) //Размер партиклей
         particles.geometry.setAttribute('aDirection', new THREE.BufferAttribute(directionsArray, 3)); //Рандомное направление
-    
+        particles.geometry.setAttribute('aRandom', new THREE.BufferAttribute(randoms, 1));
+        
         // Делаем это для того, чтобы улучшить оптимизацию, необязательно, надо узнать в chatGPT зачем это нужно.
         particles.geometry.setIndex(null)
         particles.geometry.deleteAttribute('normal')
 
         return particles
-    }, []) // в [] добавляем переменную, которую хотим затестить с помощью useControls.
+    }, []) // в [] добавляем controls, если хотим чтобы useControls работал
+
 
     // Вычисляем геометрию
-    const swapGeometry = () => {
-        // Меняем геометрию на нужную для корректной смены геометрии
-        particles.geometry.attributes.position = particles.positions[(currentSceneIndex + 1) % particles.models.length]
-        particles.geometry.attributes.aPositionTarget = particles.positions[(targetSceneIndex + 1) % particles.models.length]
-
-        // Вычисляем размеры нынешней модели
-        particles.geometry.computeBoundingBox();
-        const boundingBox = particles.geometry.boundingBox;
-    
-        // Вычисляем размеры для BoxGeometry
-        const size = new THREE.Vector3();
-        boundingBox.getSize(size);
-
-        // Вычисляем центр BoxGeometry и применяем к вторичной геометрии
-        const center = new THREE.Vector3();
-        boundingBox.getCenter(center);
-        secondMeshRef.current.position.set(center.x, center.y, center.z);
-    
-        // Создаём и обновляем геометрию второстепенного меша
-        const newGeometry = new THREE.BoxGeometry(size.x, size.y, size.z);
-        secondMeshRef.current.geometry.dispose(); // Освобождаем ресурсы старой геометрии
-        secondMeshRef.current.geometry = newGeometry;
-
-        // Возвращаем геометрию
-        particles.geometry.attributes.position = particles.positions[currentSceneIndex]
-        particles.geometry.attributes.aPositionTarget = particles.positions[targetSceneIndex]
-
-        // Меняем uniforms
-        particles.material.uniforms.uGeometryWidth.value = size.x;
-        particles.material.uniforms.uGeometryHeight.value = size.y;
+    const swapDisplacementGeometry = () => {
+        // Меняем displacement геометрию на нужную
+        displacementMeshRef.current.geometry = particles.simpleModels[(targetSceneIndex)].scene.children[0].geometry
         
-        // Запрещаем выполнение функции
+        // Запрещаем выполнение функции после того как применили новую геометрию
         letGeometrySwapRef.current = false
     }
 
-    // Меняем сцену
-    const changeSceneIndex = () => {
-        // Вычисляем нынешнюю и текущую модели
-        currentSceneIndex = targetSceneIndex
-        targetSceneIndex = (currentSceneIndex + 1) % particles.models.length
-
-        // Выставляем стартовые точки и точки таргета
-        particles.geometry.attributes.position = particles.positions[currentSceneIndex]
-        particles.geometry.attributes.aPositionTarget = particles.positions[targetSceneIndex]
-
-        // Выставляем новый индекс, чтобы понять новые стартовые точки
-        particles.material.uniforms.uProgress.value = 0.0
-
-        // Разрешаем смену геометрии
-        letGeometrySwapRef.current = true
-    }
-
-    // Применяем геометрию к вторичному мешу в самом начале
-    useEffect(() => {
-        // Вычисляем размеры нынешней модели
-        particles.geometry.computeBoundingBox();
-        const boundingBox = particles.geometry.boundingBox;
-    
-        // Вычисляем размеры для BoxGeometry
-        const size = new THREE.Vector3();
-        boundingBox.getSize(size);
-
-        // Вычисляем центр BoxGeometry и применяем к вторичной геометрии
-        const center = new THREE.Vector3();
-        boundingBox.getCenter(center);
-        secondMeshRef.current.position.set(center.x, center.y, center.z);
-    
-        // Создаём и обновляем геометрию второстепенного меша
-        const newGeometry = new THREE.PlaneGeometry(size.x, size.y);
-        secondMeshRef.current.geometry = newGeometry;
-        
-        // Передаём uniforms
-        particles.material.uniforms.uGeometryWidth.value = size.x;
-        particles.material.uniforms.uGeometryHeight.value = size.y;
-        
-    }, [])
-
+    const startAnimation = useRef(false)
+    const endAnimation = useRef(false)
+    const prevHovered = useRef(props.hoveredElement.current);
     // Анимация
     useFrame((renderer, delta)=> {
-        // console.log(particles.material.uniforms.uGeometryWidth.value);
+        if( props.activeMenu.current === false) {
+            displacementMeshRef.current.position.z = -5
+        } else {
+            displacementMeshRef.current.position.z = 0
+        }
         particles.material.uniforms.uTime.value += delta
-        particles.material.uniforms.uCursor.value = cursorPosRef.current;
-        // particles.material.uniforms.uTime.value = particles.material.uniforms.uTime.value % 1.05
 
-        // АНИМАЦИЯ СМЕНЫ ОБЪЕКТОВ
-        easing.damp(particles.material.uniforms.uProgress, 'value', 1.0, 0.5)
+        particles.material.uniforms.uCursor.value = cursorWorldPositionRef.current
+        cursorMeshRef.current.position.x = cursorWorldPositionRef.current.x
+        cursorMeshRef.current.position.y = cursorWorldPositionRef.current.y
+        cursorMeshRef.current.position.z = cursorWorldPositionRef.current.z
+
+        updateCursorPath(cursorWorldPositionRef.current)
+        const delayIndex = 30; // Например, задержка в 20 позиций
+        if (cursorPath.current.length > delayIndex) {
+            const delayedPosition = cursorPath.current[delayIndex];
+            // Обновляем положение "предыдущего" курсора
+            prevCursorMeshRef.current.position.copy(delayedPosition);
+        }
 
         // Меняем вторичную геометрию
-        if (particles.material.uniforms.uProgress.value >= 0.45 && particles.material.uniforms.uProgress.value <= 0.55 && letGeometrySwapRef.current === true) {
-            swapGeometry()
+        // ИСПОЛЬЗУЕМ ЭТО, ЕСЛИ НАДО ПОМЕНЯТЬ DISPLACEMENT
+        // if (particles.material.uniforms.uProgress.value >= 0.4 && particles.material.uniforms.uProgress.value <= 0.6 && letGeometrySwapRef.current === true) {
+        //     swapDisplacementGeometry()
+        // }
+
+        // Если меняется hoveredElement, то запускаем анимацию
+        if (props.hoveredElement.current !== prevHovered.current) {   
+            if (
+            props.hoveredElement.current === 'hoveredLi0' || 
+            props.hoveredElement.current === 'hoveredLi1' ||
+            props.hoveredElement.current === 'hoveredLi2' ||
+            props.hoveredElement.current === 'hoveredLi3'
+            ) {
+                startAnimation.current = true
+                endAnimation.current = false
+                prevHovered.current = props.hoveredElement.current
+            }
         }
 
-        // Меняем индекс сцены для анимации
-        if (particles.material.uniforms.uProgress.value === 1) {
-            changeSceneIndex()
+        // Скорость смены партиклей
+        const cooficent = 1.1
+        if (startAnimation.current === true) {
+            if (particles.material.uniforms.uProgress.value > 0.5) {
+                particles.material.uniforms.uProgress.value += delta * cooficent
+
+                if (particles.material.uniforms.uProgress.value >= 1) {
+                    particles.material.uniforms.uProgress.value = 0
+                    currentSceneIndex = targetSceneIndex
+                    particles.geometry.attributes.position = particles.positions[currentSceneIndex]
+
+                    if (props.hoveredElement.current === 'hoveredLi0') {
+                        targetSceneIndex = 0
+                    }
+                    if (props.hoveredElement.current === 'hoveredLi1') {
+                        targetSceneIndex = 1
+                    }
+                    if (props.hoveredElement.current === 'hoveredLi2') {
+                        targetSceneIndex = 2
+                    }
+                    if (props.hoveredElement.current === 'hoveredLi3') {
+                        targetSceneIndex = 3
+                    }
+                    
+                    particles.geometry.attributes.aPositionTarget = particles.positions[targetSceneIndex]
+                    startAnimation.current = false
+                    endAnimation.current = true
+                }
+            } else {
+                particles.material.uniforms.uProgress.value -= delta * cooficent
+                if (particles.material.uniforms.uProgress.value <= 0) {
+                    if (props.hoveredElement.current === 'hoveredLi0') {
+                        targetSceneIndex = 0
+                    }
+                    if (props.hoveredElement.current === 'hoveredLi1') {
+                        targetSceneIndex = 1
+                    }
+                    if (props.hoveredElement.current === 'hoveredLi2') {
+                        targetSceneIndex = 2
+                    }
+                    if (props.hoveredElement.current === 'hoveredLi3') {
+                        targetSceneIndex = 3
+                    }
+                    particles.geometry.attributes.aPositionTarget = particles.positions[targetSceneIndex]
+                    startAnimation.current = false
+                    endAnimation.current = true
+                }
+            }
+            letGeometrySwapRef.current = true
         }
+        if (endAnimation.current === true) {
+            particles.material.uniforms.uProgress.value += delta * cooficent
+            if (particles.material.uniforms.uProgress.value >= 1) {
+                endAnimation.current = false
+            }
+        }
+
+        
+
+        // particles.geometry.attributes.position = particles.positions[currentSceneIndex]
+        // particles.geometry.attributes.aPositionTarget = particles.positions[targetSceneIndex]
+
     })
 
     return <>
     <points geometry={particles.geometry} material={particles.material} ref={pointsRef} />
-    <mesh
-        ref={secondMeshRef}
-        onPointerMove={(e) => {
-            cursorPosRef.current = [(e.uv.x - 0.5) * 2, (e.uv.y - 0.5) * 2]; // Получаем позицию курсора в пространстве сцены
-        }}
-        >
-        <meshBasicMaterial visible={false} transparent={true} opacity={0.15}/>
+    <DisplacementMesh ref={displacementMeshRef}
+    // controls={controls}
+    cursorWorldPositionRef={cursorWorldPositionRef}
+    simpleModels={particles.simpleModels}
+    />
+    <mesh ref={cursorMeshRef} scale={0.1} visible={false}>
+        <sphereGeometry />
+        <meshBasicMaterial />
+    </mesh>
+    <mesh ref={prevCursorMeshRef} scale={0.1} visible={false}>
+        <sphereGeometry />
+        <meshBasicMaterial color={'red'}/>
     </mesh>
     <ambientLight />
     {/* <directionalLight /> */}

@@ -10,7 +10,7 @@ export default function Particles(props) {
     const letterMap = useTexture("/images/letter1.png");
 
     // Количество партиклей
-    let number = 100;
+    let number = 500;
 
     // Позиции партиклей, умножаем на 3. Потому что у каждого партикля есть x, y, z
     const positions = useMemo(() => {

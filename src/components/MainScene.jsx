@@ -69,12 +69,6 @@ export default function MainScene(props) {
     // Функция переключения сцен
     const switchScenes = () => {
         easing.damp(progress, 'current', progressTo.current, 0.6);
-        // if (progressTo.current > 1) {
-        //     progressTo.current = 1.05
-        // }
-        // if (progressTo.current < 0) {
-        //     progressTo.current = -0.05
-        // }
     
         if (progress.current > 1) {
             progressTo.current = (progressTo.current % 1) * 0.25;
@@ -163,9 +157,13 @@ export default function MainScene(props) {
             gl.setRenderTarget(null)
 
         } else { //Рендер сцены меню, если меню открыто
+            renderSceneRef.current.scene.current.visible = false
             gl.setRenderTarget(renderTargetMenu)
             sceneMenuRef.current.visible = true
             gl.render(sceneMenuRef.current, camera)
+            
+            sceneMenuRef.current.visible = false
+            renderSceneRef.current.scene.current.visible = true
 
             // МОЖНО ЗАКОМЕНТИРОВАТЬ ЕСЛИ EFFECT COMPOSER ВКЛЮЧЕН.
             gl.setRenderTarget(null)
@@ -210,7 +208,7 @@ export default function MainScene(props) {
         <Scene1 ref={scenes.current[0]} currentScene={currentScene} nextScene={nextScene} progress={progress} scenes={scenes} displacementCanvasRef={props.displacementCanvasRef}/>
         <Scene2 ref={scenes.current[1]} currentScene={currentScene} nextScene={nextScene} progress={progress} scenes={scenes}/>
         <Scene3 ref={scenes.current[2]} currentScene={currentScene} nextScene={nextScene} progress={progress} scenes={scenes}/>
-        <SceneMenu ref={sceneMenuRef} activeMenu={props.activeMenu}/>
+        <SceneMenu ref={sceneMenuRef} activeMenu={props.activeMenu} hoveredElement={props.hoveredElement}/>
         <EffectComposer 
         multisampling={0} 
         disableNormalPass={false}

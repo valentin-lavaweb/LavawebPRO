@@ -2,21 +2,21 @@
 
 uniform float uTime;
 uniform float uSize;
-uniform vec2 uCursor;
+uniform vec3 uCursor;
 uniform vec2 uResolution;
 uniform float uProgress;
 uniform float uDuration;
 uniform float uFrequency;
 
-uniform float uMoveIntensity; // Интенсивность движения
-uniform float uRadius; // Радиус реакции на курсор
-uniform float uMinDistance;
-uniform float uGeometryWidth;
-uniform float uGeometryHeight;
+uniform vec3 uPrevCursor; // Добавьте этот uniform в начало шейдера
+uniform float uCursorRadius; // Радиус реакции на курсор
+uniform float uSpreadIntensity; // Интенсивоность разброса
+uniform float uAlpha;
 
 attribute vec3 aPositionTarget;
 attribute float aSize;
 attribute vec3 aDirection;
+attribute float aRandom;
 // attribute float aDistance;
 // attribute float aRadius;
 // attribute float aAngle;
@@ -27,11 +27,14 @@ varying vec3 vColor;
 
 float PI = 3.14592653589793238;
 
-float remap(float value, float originMin, float originMax, float destinationMin, float destinationMax) {
-    return destinationMin + (value - originMin) * (destinationMax - destinationMin) / (originMax - originMin);
-}
-
 void main() {
+
+    // Рассчитываем разброс в разных направлениях с использованием шума
+    vec3 noiseDirection = vec3(
+        simplexNoise3d(vec3(position * uFrequency + (uTime * 0.05 * aRandom * aRandom))),
+        simplexNoise3d(vec3(position * uFrequency + (uTime * 0.05 * aRandom * aRandom))), // Смещаем координаты для Y
+        simplexNoise3d(vec3(position * uFrequency + (uTime * 0.05 * aRandom * aRandom)))  // и Z, чтобы получить разные значения шума
+    );
 
     // Mixed position
     float noiseStart = simplexNoise3d(position * uFrequency);
@@ -42,35 +45,45 @@ void main() {
     float delay = (1.0 - uDuration) * noise;
     float end = delay + uDuration;
 
+
     float progress = smoothstep(delay, end, uProgress);
     vec3 mixedPosition = mix(position, aPositionTarget, progress);
 
-    // Нормализация и масштабирование позиции курсора
-    vec2 normalizedCursorPosition = (uCursor + 1.0) / 2.0; // Преобразование к диапазону 0..1
-    normalizedCursorPosition.x = normalizedCursorPosition.x * uGeometryWidth - (uGeometryWidth / 2.0);
-    normalizedCursorPosition.y = normalizedCursorPosition.y * uGeometryHeight - (uGeometryHeight / 2.0);
+    // Расстояние от курсора до партиклы
+    float distanceToCursor = distance(uCursor, mixedPosition);
+    float effectFactor = smoothstep(uCursorRadius * noise * 10.0, 0.0, distanceToCursor);
 
-    vec4 worldPosition = modelMatrix * vec4(mixedPosition, 1.0);
+    // Вычисление фактора влияния курсора
+    float cursorEffect = smoothstep(uCursorRadius, 0.0, distanceToCursor);
 
-    // Вычисление смещения на основе расстояния до курсора
-    float distance = distance(worldPosition.xy, normalizedCursorPosition);
-    float moveThreshold = max(uGeometryWidth, uGeometryHeight) / 10.0;
+    // Дополнительное хаотичное движение
+    vec3 chaoticMovement = noiseDirection * 0.1 + noise *0.1; // Множитель хаоса, можно регулировать
+    // chaoticMovement = clamp(chaoticMovement, -2.0, 2.0);
 
-    if(distance < moveThreshold) {
-        // Разлет партиклов в случайных направлениях
-        mixedPosition += aDirection * (moveThreshold - distance) * uMoveIntensity;
-    }
+    // Разброс в разных направлениях
+    vec3 spreadMovement = aDirection * effectFactor * uSpreadIntensity * chaoticMovement; // aRandom добавляет вариативность
+    // spreadMovement = clamp(spreadMovement, -3.0, 3.0);
 
-    vec4 finalWorldPosition = modelMatrix * vec4(mixedPosition, 1.0);
-    vec4 viewPosition = viewMatrix * finalWorldPosition;
-    vec4 projectedPosition = projectionMatrix * viewPosition;
-    gl_Position = projectedPosition;
+    mixedPosition += vec3(spreadMovement.x, spreadMovement.y, spreadMovement.z);
+    // mixedPosition += chaoticMovement;
+
+    // float effectFactor = (1.0 - smoothstep(0.0, uCursorRadius, distanceToCursor));
+
+    // Разброс в разных направлениях
+    // vec3 spreadMovement = aDirection * effectFactor * uSpreadIntensity * aRandom;
+
+    // Умножаем на noiseDirection Если хотим получить движение партиклей
+    // spreadMovement *= noiseDirection;
+
+
+    // Применяем positionMovement к mixedPosition
+    // mixedPosition += vec3(spreadMovement.x, spreadMovement.y, spreadMovement.z);
 
     // Final position
-    // vec4 modelPosition = modelMatrix * vec4(mixedPosition.x, mixedPosition.y, mixedPosition.z, 1.0);
-    // vec4 viewPosition = viewMatrix * modelPosition;
-    // vec4 projectedPosition = projectionMatrix * viewPosition;
-    // gl_Position = projectedPosition;
+    vec4 modelPosition = modelMatrix * vec4(mixedPosition.x, mixedPosition.y, mixedPosition.z, 1.0);
+    vec4 viewPosition = viewMatrix * modelPosition;
+    vec4 projectedPosition = projectionMatrix * viewPosition;
+    gl_Position = projectedPosition;
 
 
     // Point size
@@ -80,5 +93,7 @@ void main() {
     // Send varyings to fragment
     vUv = uv;
     vPosition = mixedPosition;
-    vColor = vec3(noise);
+    // vColor = vec3(noise);
+    // Передаем влияние курсора в фрагментный шейдер
+    vColor = vec3(cursorEffect);  // Уже определено как varying vec3 vColor;
 }

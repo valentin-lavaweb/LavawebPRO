@@ -32,7 +32,7 @@ void main() {
 
     // Меняем позицию
     float displacementIntensity = texture(uDisplacementTexture, uv).r;
-    displacementIntensity = smoothstep(0.1, 0.3, displacementIntensity);
+    displacementIntensity = smoothstep(0.1, 0.3, displacementIntensity); // 0.1 0.3 = задержка перед возвращением,  0.1 1.0 - без задержки перед возвращением
     vec3 displacement = vec3(
         cos(aDirectionMove),
         sin(aDirectionMove),

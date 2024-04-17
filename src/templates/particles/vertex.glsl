@@ -32,15 +32,15 @@ void main() {
     vAngle = aAngle;
 
     // Выставляем стартовую позицию
-    vPosition.x = vRadius * cos(vAngle) * uCursor.x;
-    vPosition.y = vRadius * sin(vAngle) * uCursor.x;
+    vPosition.x = vRadius * cos(vAngle);
+    vPosition.y = vRadius * sin(vAngle);
 
     // Записываем стартовую позицию
-    vStartPosition.x = vPosition.x;
-    vStartPosition.y = vPosition.y;
+    // vStartPosition.x = vPosition.x;
+    // vStartPosition.y = vPosition.y;
 
     // Движение частиц влево
-    // vPosition.x = mod(aVelocity * -uTime, aDistance);
+    vPosition.x = mod(aVelocity * -uTime, aDistance);
 
     // Движение частиц по кругу 
     vPosition.xy += mod(uTime * aVelocity * -vPosition.xy, (vDistance) * vPosition.xy);

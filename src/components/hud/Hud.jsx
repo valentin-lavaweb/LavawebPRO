@@ -52,6 +52,10 @@ export default forwardRef(function Hud(props, ref) {
             setTransition(false)
         }, 1500);
     }, [language])
+
+    useEffect(() => {
+        props.hoveredElement.current = hoveredElement
+    }, [hoveredElement])
     
     return <>
     <CSSTransition nodeRef={nodeRef} in={activeMenu} timeout={2000} 

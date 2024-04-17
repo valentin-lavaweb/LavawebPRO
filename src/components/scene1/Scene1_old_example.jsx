@@ -36,17 +36,17 @@ export default forwardRef( function Scene1(props, ref) {
       const sphere = useRef();
       // sphere rotates following the mouse position
       useFrame(({ clock, pointer }) => {
-        sphere.current.rotation.z = clock.getElapsedTime();
-        sphere.current.rotation.y = THREE.MathUtils.lerp(
-          sphere.current.rotation.y,
-          pointer.x * Math.PI,
-          0.1
-        );
-        sphere.current.rotation.x = THREE.MathUtils.lerp(
-          sphere.current.rotation.x,
-          pointer.y * Math.PI,
-          0.1
-        );
+        // sphere.current.rotation.z = clock.getElapsedTime();
+        // sphere.current.rotation.y = THREE.MathUtils.lerp(
+        //   sphere.current.rotation.y,
+        //   pointer.x * Math.PI,
+        //   0.1
+        // );
+        // sphere.current.rotation.x = THREE.MathUtils.lerp(
+        //   sphere.current.rotation.x,
+        //   pointer.y * Math.PI,
+        //   0.1
+        // );
       });
       return (
         <>
@@ -199,8 +199,8 @@ export default forwardRef( function Scene1(props, ref) {
     <scene ref={ref.scene}>
       <color attach="background" args={["#030d15"]} />
       <perspectiveCamera {...three.camera} ref={ref.camera}/>
-      {/* <BackgroundLavaComponent progress={props.progress} currentScene={props.currentScene} scenes={props.scenes}/> */}
-      {/* <MeshDistortMaterial
+      <BackgroundLavaComponent progress={props.progress} currentScene={props.currentScene} scenes={props.scenes}/>
+      <MeshDistortMaterial
           ref={setMaterial}
           envMap={envMap}
           bumpMap={bumpMap}
@@ -212,13 +212,12 @@ export default forwardRef( function Scene1(props, ref) {
           clearcoatRoughness={1}
           radius={1}
           distort={0.35}
-      /> */}
+      />
       <group ref={groupRef}>
-        <Sphere />
+        {/* <Sphere />
         <LittleSpheres />
-        <Rings />
-        <PlatformScene />
-        {/* <TestObject /> */}
+        <Rings /> */}
+        {/* <PlatformScene /> */}
       </group>
     </scene>
     </>
