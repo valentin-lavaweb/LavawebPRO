@@ -45,7 +45,7 @@ void main() {
     // Движение частиц по кругу 
     vPosition.xy += mod(uTime * aVelocity * -vPosition.xy, (vDistance) * vPosition.xy);
 
-    vec4 mvPosition = modelViewMatrix * vec4(vPosition.x, vPosition.y, vPosition.z, 1);
+    vec4 mvPosition = modelViewMatrix * vec4(vPosition.x, vPosition.y, vPosition.z, 1.0);
 
     // Размер кружков, получили реальное соотношение с unitами Canvas'а с помощью / 7.67
     // / 7.67 подходит, если используем буферную геометрию

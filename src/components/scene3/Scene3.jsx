@@ -10,8 +10,8 @@ export default forwardRef( function Scene3(props, ref) {
     }, [])
 
     useFrame(({pointer}) => {
-        easing.damp(ref.camera.current.position, 'x', pointer.x * 0.02, 0.2);
-        ref.camera.current.lookAt(0, 0, 0)
+        // easing.damp(ref.camera.current.position, 'x', pointer.x * 0.02, 0.2);
+        // ref.camera.current.lookAt(0, 0, 0)
         if (props.currentScene.current === 2) {
           easing.damp(groupRef.current.position, 'y', (props.progress.current - 0) * 2, 0.05);
         } else if (props.currentScene.current === 1) {

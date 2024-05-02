@@ -27,7 +27,7 @@ export default function MorphCursorParticles(props) {
     // const simpleModel4 = useGLTF('/models/displacementMenu.glb')
 
     const pointsRef = useRef()
-    const cursorWorldPositionRef = useRef(new THREE.Vector3());
+    const cursorWorldPositionRef = useRef(new THREE.Vector3(999.0, 999.0, 999.0))
 
     const cursorMeshRef = useRef()
     const prevCursorMeshRef = useRef()

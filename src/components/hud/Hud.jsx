@@ -1,8 +1,6 @@
 import { forwardRef, useEffect, useRef, useState } from "react"
 import styles from './styles.module.scss'
-import { useStore } from "../../store"
 import { CSSTransition } from "react-transition-group"
-import { motion } from "framer-motion"
 import { texts } from "./texts.jsx"
 import GlitchText from "./GlitchText.jsx"
 

@@ -27,6 +27,8 @@ export default function MainScene(props) {
     const three = useThree()
 
     const dpr = useRef(0.1);
+    const letScrollProgress = useRef(true);
+    const scrollScene1 = useRef(0.0);
     const progressTo = useRef(0.0);
     const progress = useRef(0.0);
     const currentScene = useRef(0)
@@ -40,6 +42,8 @@ export default function MainScene(props) {
         scene: useRef(),
         material: useRef()
     });
+
+    const cameraAnimation = useRef(true)
 
     // Сцены
     const scenes = useRef([
@@ -60,9 +64,13 @@ export default function MainScene(props) {
 
     // Функция скролла
     const scrollFunction = useCallback((progressTo) => (e) => {
-        // Включаем скролл, только если камера почти вернулась на место
-        if(scenes.current[currentScene.current].camera.current.position.z <= props.defaultCameraPosition.current) {
+        // Включаем скролл, только если камера вернулась на место
+        if(scenes.current[currentScene.current].camera.current.position.z <= props.defaultCameraPosition.current && letScrollProgress.current === true) {
             progressTo.current -= (e.deltaY / 1000)
+        }
+        // Скролл первой сцены
+        if(currentScene.current === 0 && letScrollProgress.current === false) {
+            scrollScene1.current += (e.deltaY / 500)
         }
     }, [progressTo]);
 
@@ -83,9 +91,21 @@ export default function MainScene(props) {
             progress.current = 1;
             currentScene.current = (currentScene.current - 1 + scenes.current.length) % scenes.current.length;
             nextScene.current = (currentScene.current + 1) % scenes.current.length;
+            // letScrollProgress.current = false
             if (currentScene.current === 0) {
                 nextScene.current = 1;
             }
+        }
+    }
+
+    // Функция отдаления и приближения камеры
+    const checkCamerasZ = () => {
+        if (props.activeMenu.current === true) {
+            easing.damp(scenes.current[currentScene.current].camera.current.position, 'z', props.defaultCameraPosition.current * 2, 2);
+            easing.damp(scenes.current[nextScene.current].camera.current.position, 'z', props.defaultCameraPosition.current * 2, 2);
+        } else {
+            easing.damp(scenes.current[currentScene.current].camera.current.position, 'z', props.defaultCameraPosition.current, 0.5);
+            easing.damp(scenes.current[nextScene.current].camera.current.position, 'z', props.defaultCameraPosition.current, 0.5);
         }
     }
 
@@ -119,6 +139,7 @@ export default function MainScene(props) {
         };
     }, [renderTarget, renderTarget2, scenes]);
 
+    // Включаем скролл, подготавливаем сцены
     useEffect(() => {
         three.invalidate() // подготовили все сцены
         const scrollEventHandler = scrollFunction(progressTo);
@@ -148,8 +169,10 @@ export default function MainScene(props) {
             
             scenes.current[currentScene.current].scene.current.visible = false
             scenes.current[nextScene.current].scene.current.visible = false
+
             // renderSceneRef.current.material.current.uniforms.tex.value = renderTarget.texture
             // renderSceneRef.current.material.current.uniforms.tex2.value = renderTarget2.texture
+
             sceneMenuRef.current.visible = false
             renderSceneRef.current.scene.current.visible = true
     
@@ -173,24 +196,8 @@ export default function MainScene(props) {
             renderSceneRef.current.material.current.progression = progress.current
         }
 
-        // Двигаем камеру всех сцен, если открыли меня
-        if (props.activeMenu.current === true) {
-            easing.damp(scenes.current[currentScene.current].camera.current.position, 'z', props.defaultCameraPosition.current * 2, 2);
-            easing.damp(scenes.current[nextScene.current].camera.current.position, 'z', props.defaultCameraPosition.current * 2, 2);
-            
-            // easing.damp(scenes.current[currentScene.current].camera.current, 'fov', 200, 1);
-            // scenes.current[currentScene.current].camera.current.updateProjectionMatrix();
-            // easing.damp(scenes.current[nextScene.current].camera.current, 'fov', 200, 1);
-            // scenes.current[nextScene.current].camera.current.updateProjectionMatrix();
-        } else {
-            easing.damp(scenes.current[currentScene.current].camera.current.position, 'z', props.defaultCameraPosition.current, 0.5);
-            easing.damp(scenes.current[nextScene.current].camera.current.position, 'z', props.defaultCameraPosition.current, 0.5);
-
-            // easing.damp(scenes.current[currentScene.current].camera.current, 'fov', 75, 0.5);
-            // scenes.current[currentScene.current].camera.current.updateProjectionMatrix();
-            // easing.damp(scenes.current[nextScene.current].camera.current, 'fov', 75, 0.5);
-            // scenes.current[nextScene.current].camera.current.updateProjectionMatrix();
-        }
+        // Двигаем камеру всех сцен, если открыли меню
+        // checkCamerasZ()
     })
 
     // useFrame(({scene}) =>{
@@ -205,7 +212,10 @@ export default function MainScene(props) {
         progress={progress}
         activeSceneMenu={props.activeSceneMenu}
         />
-        <Scene1 ref={scenes.current[0]} currentScene={currentScene} nextScene={nextScene} progress={progress} scenes={scenes} displacementCanvasRef={props.displacementCanvasRef}/>
+        <Scene1 ref={scenes.current[0]}
+        currentScene={currentScene} nextScene={nextScene} progress={progress} scenes={scenes} scrollScene1={scrollScene1} activeMenu={props.activeMenu}
+        letScrollProgress={letScrollProgress}
+        />
         <Scene2 ref={scenes.current[1]} currentScene={currentScene} nextScene={nextScene} progress={progress} scenes={scenes}/>
         <Scene3 ref={scenes.current[2]} currentScene={currentScene} nextScene={nextScene} progress={progress} scenes={scenes}/>
         <SceneMenu ref={sceneMenuRef} activeMenu={props.activeMenu} hoveredElement={props.hoveredElement}/>

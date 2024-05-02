@@ -1,4 +1,8 @@
-// НУЖНО СОЗДАТЬ КАНВАС, ДАТЬ ЕМУ REF И ПЕРЕДАТЬ ЭТОТ РЕФ В ЭТОТ ФАЙЛ ЧЕРЕЗ PROPS.
+// READ ME // READ ME // READ ME // READ ME // READ ME // READ ME // READ ME // READ ME // READ ME // READ ME 
+// READ ME // READ ME // READ ME // READ ME // READ ME // READ ME // READ ME // READ ME // READ ME // READ ME 
+// READ ME // READ ME // READ ME // READ ME // READ ME // READ ME // READ ME // READ ME // READ ME // READ ME 
+
+// НУЖНО СОЗДАТЬ КАНВАС ВНЕ СЦЕНЫ, ДАТЬ ЕМУ REF И ПЕРЕДАТЬ ЭТОТ РЕФ В ЭТОТ ФАЙЛ ЧЕРЕЗ PROPS.
 
 import { useFrame, useLoader, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
@@ -137,6 +141,17 @@ export default function TextureParticles(props) {
         // Обновляем текстуру
         displacementCanvas.texture.needsUpdate = true
     })
+
+    useEffect(() => {
+        props.displacementCanvasRef.current.style.position = 'fixed'
+        props.displacementCanvasRef.current.style.right = '0px'
+        props.displacementCanvasRef.current.style.top = '0px'
+        props.displacementCanvasRef.current.style.width = `${64}px`
+        props.displacementCanvasRef.current.style.height = `${64}px`
+        props.displacementCanvasRef.current.style.display = 'none'
+        props.displacementCanvasRef.current.style.pointerEvents = 'none'
+        props.displacementCanvasRef.current.style.opacity = '1'
+    }, [])
 
     return <>
     <points material={particles.material} geometry={particles.geometry}/>
