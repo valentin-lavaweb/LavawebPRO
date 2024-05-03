@@ -41,10 +41,10 @@ export default forwardRef(function RenderScene(props, ref) {
     
 
         void main() {    
-        // gl_FragColor = vec4(vUv, 0.0, 1.0);
             vec4 t = texture2D(tex, vUv);
             vec4 t1 = texture2D(tex2, vUv);
             vec4 tMenu = texture2D(texMenu, vUv);
+
             // Calculate diagonal gradient
             float diagonal = (vUv.y / 1.45) - (vUv.x * 0.15);
             float sweep = step(diagonal, progression - 0.225);
@@ -67,9 +67,7 @@ export default forwardRef(function RenderScene(props, ref) {
 
     return <>
     <scene ref={ref.current.scene}>
-        <mesh onClick={() => {
-            // props.activeMenu.current = !props.activeMenu.current
-        }}>
+        <mesh>
             <planeGeometry args={[2.0, 2.0]} />
             {/* <planeGeometry args={[three.viewport.width, three.viewport.height]} /> */}
             <transitionMaterial

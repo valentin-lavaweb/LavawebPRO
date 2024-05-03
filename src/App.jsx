@@ -37,7 +37,6 @@ export default function App() {
       // flat={false}
       // orthographic
       // scene={null}
-      // antialias={window.devicePixelRatio}
     >
       <color attach="background" args={["#ff0000"]} />
       {/* <fog color="#131e25" attach="fog" near={8} far={30} /> */}

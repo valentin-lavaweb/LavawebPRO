@@ -13,7 +13,7 @@ export default forwardRef( function Scene1(props, ref) {
 
     useEffect(() => {
       ref.scene.current.visible = false
-      orbitRef.current.object = ref.camera.current
+      // orbitRef.current.object = ref.camera.current
     }, [])
 
 
@@ -41,7 +41,7 @@ export default forwardRef( function Scene1(props, ref) {
         <Hologram />
         <CurvesModel />
       </group>
-      <OrbitControls ref={orbitRef}/>
+      {/* <OrbitControls ref={orbitRef}/> */}
     </scene>
     </>
 })

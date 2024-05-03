@@ -1,7 +1,5 @@
-import * as THREE from 'three'
-import { useFrame, useLoader, useThree } from "@react-three/fiber"
-import { forwardRef, useEffect, useRef, useState } from "react"
-import DigitalBackground from './background/DigitalBackground.jsx'
+import { useFrame } from "@react-three/fiber"
+import { forwardRef, useEffect, } from "react"
 import MorphCursorParticles from '../../templates/morphCursorParticles/MorphCursorParticles.jsx'
 import { easing } from 'maath'
 
@@ -18,8 +16,6 @@ export default forwardRef( function SceneMenu(props, ref) {
     return <>
     <scene ref={ref}>
         <color attach="background" args={["#181c20"]} />
-        {/* <DigitalBackground activeMenu={props.activeMenu}/> */}
-        {/* <pointLight position={[0,0,3]} intensity={10}/> */}
         <MorphCursorParticles hoveredElement={props.hoveredElement} activeMenu={props.activeMenu}/>
     </scene>
     </>

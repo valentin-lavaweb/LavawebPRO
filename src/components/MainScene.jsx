@@ -72,7 +72,7 @@ export default function MainScene(props) {
     }, [progressTo]);
 
     // Функция переключения сцен
-    const switchScenes = () => {
+    function switchScenes() {
         easing.damp(progress, 'current', progressTo.current, 0.6);
     
         if (progress.current > 1) {
@@ -96,7 +96,7 @@ export default function MainScene(props) {
     }
 
     // Функция отдаления и приближения камеры
-    const checkCamerasZ = () => {
+    function checkCamerasZ() {
         if (props.activeMenu.current === true) {
             easing.damp(scenes.current[currentScene.current].camera.current.position, 'z', props.defaultCameraPosition.current * 2, 2);
             easing.damp(scenes.current[nextScene.current].camera.current.position, 'z', props.defaultCameraPosition.current * 2, 2);
@@ -167,8 +167,8 @@ export default function MainScene(props) {
             scenes.current[currentScene.current].scene.current.visible = false
             scenes.current[nextScene.current].scene.current.visible = false
 
-            // renderSceneRef.current.material.current.uniforms.tex.value = renderTarget.texture
-            // renderSceneRef.current.material.current.uniforms.tex2.value = renderTarget2.texture
+            renderSceneRef.current.material.current.uniforms.tex.value = renderTarget.texture
+            renderSceneRef.current.material.current.uniforms.tex2.value = renderTarget2.texture
 
             sceneMenuRef.current.visible = false
             renderSceneRef.current.scene.current.visible = true
@@ -218,12 +218,12 @@ export default function MainScene(props) {
         <SceneMenu ref={sceneMenuRef} activeMenu={props.activeMenu} hoveredElement={props.hoveredElement}/>
         <EffectComposer 
         multisampling={0} 
-        disableNormalPass={false}
+        disableNormalPass={true}
         depthBuffer={true}
         stencilBuffer={true}
         // scene={renderSceneRef.current.scene.current}
         scene={null}
-        // resolutionScale={2}
+        resolutionScale={0.5}
         >
             <Bloom
             mipmapBlur
