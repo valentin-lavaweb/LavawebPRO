@@ -32,7 +32,7 @@ export default function App() {
         position: [0, 0, defaultCameraPosition.current],
         fov: 75
       }}
-      dpr={dpr}
+      dpr={1}
       // linear={true}
       // flat={false}
       // orthographic
@@ -40,7 +40,6 @@ export default function App() {
       // antialias={window.devicePixelRatio}
     >
       <color attach="background" args={["#ff0000"]} />
-      {/* <PerformanceMonitor onIncline={() => setDpr(2)} onDecline={() => setDpr(window.devicePixelRatio)} /> */}
       {/* <fog color="#131e25" attach="fog" near={8} far={30} /> */}
       <Suspense fallback={<Html center>Loading.</Html>}>
         <MainScene displacementCanvasRef={displacementCanvasRef}

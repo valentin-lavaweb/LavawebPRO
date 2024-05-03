@@ -2,14 +2,14 @@ import * as THREE from 'three'
 import { useFrame, useThree } from "@react-three/fiber"
 import { forwardRef, useEffect, useMemo, useRef, useState } from "react"
 import { easing } from 'maath'
-import BrainModel from '../../templates/brainModel/BrainModel.jsx'
+import Hologram from '../../templates/hologram/Hologram.jsx'
+import CurvesModel from '../../templates/curvesModel/CurvesModel.jsx'
 import { OrbitControls } from '@react-three/drei'
 
 export default forwardRef( function Scene1(props, ref) {
     const three = useThree()
     const groupRef = useRef()
     const orbitRef = useRef()
-    const prevActiveMenu = useRef(props.activeMenu.current);
 
     useEffect(() => {
       ref.scene.current.visible = false
@@ -38,9 +38,8 @@ export default forwardRef( function Scene1(props, ref) {
       <perspectiveCamera {...three.camera} ref={ref.camera}/>
       {/* <BackgroundLavaComponent progress={props.progress} currentScene={props.currentScene} scenes={props.scenes}/> */}
       <group ref={groupRef}>
-        {/* <Hologram /> */}
-        {/* <SchemesMoving /> */}
-        <BrainModel />
+        <Hologram />
+        <CurvesModel />
       </group>
       <OrbitControls ref={orbitRef}/>
     </scene>

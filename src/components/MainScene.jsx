@@ -26,7 +26,6 @@ const SceneMenu = React.lazy(() => import("./sceneMenu/SceneMenu.jsx"));
 export default function MainScene(props) {
     const three = useThree()
 
-    const dpr = useRef(0.1);
     const letScrollProgress = useRef(true);
     const scrollScene1 = useRef(0.0);
     const progressTo = useRef(0.0);
@@ -42,8 +41,6 @@ export default function MainScene(props) {
         scene: useRef(),
         material: useRef()
     });
-
-    const cameraAnimation = useRef(true)
 
     // Сцены
     const scenes = useRef([
@@ -192,7 +189,7 @@ export default function MainScene(props) {
             gl.setRenderTarget(null)
         }
         if (renderSceneRef.current != null) {
-            // renderSceneRef.current.material.current.map = renderTarget.texture
+            renderSceneRef.current.material.current.map = renderTarget.texture
             renderSceneRef.current.material.current.progression = progress.current
         }
 
@@ -231,9 +228,9 @@ export default function MainScene(props) {
             <Bloom
             mipmapBlur
             mipMap={false}
-            kernelSize={KernelSize.LARGE}
+            kernelSize={KernelSize.VERY_LARGE}
             luminanceThreshold={1}
-            luminanceSmoothing={0.2}
+            luminanceSmoothing={0.1}
             // opacity={3}
             intensity={2}
             />
