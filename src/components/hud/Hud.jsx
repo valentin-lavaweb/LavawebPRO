@@ -123,7 +123,7 @@ export default forwardRef(function Hud(props, ref) {
                 hoveredElement={hoveredElement} setHoveredElement={setHoveredElement} language={language} transition={transition}
                 text={li}
                 elementToHover={liIndex}
-                elementName={`hoveredLi${liIndex}`} duration={0.3} delay={0.1}
+                elementName={`hoveredLi${liIndex}`} duration={0.15} delay={0.045}
                 />
             })}
         </div>

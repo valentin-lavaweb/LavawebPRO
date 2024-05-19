@@ -7,15 +7,17 @@ import {
     Bloom,
     Noise,
     Vignette,
-    BrightnessContrast
+    BrightnessContrast,
   } from "@react-three/postprocessing";
   import { KernelSize } from "postprocessing";
   import {
     OrbitControls, useFBO
   } from "@react-three/drei";
-import { useFrame, useThree } from "@react-three/fiber";
+import { extend, useFrame, useLoader, useThree } from "@react-three/fiber";
 import { easing } from "maath";
 import RenderScene from "./renderScene/RenderScene.jsx";
+import BlurEffectComponent from "../templates/blurEffect/BlurEffectComponent.jsx";
+import { RGBELoader } from "three-stdlib";
 // import WebGPURenderer from 'three/addons/renderers/webgpu/WebGPURenderer.js';
 
 const Scene1 = React.lazy(() => import("./scene1/Scene1.jsx"));
@@ -26,8 +28,7 @@ const SceneMenu = React.lazy(() => import("./sceneMenu/SceneMenu.jsx"));
 export default function MainScene(props) {
     const three = useThree()
 
-    const letScrollProgress = useRef(true);
-    const scrollScene1 = useRef(0.0);
+    const letScrollScene = useRef(1);
     const progressTo = useRef(0.0);
     const progress = useRef(0.0);
     const currentScene = useRef(0)
@@ -36,7 +37,7 @@ export default function MainScene(props) {
     const [windowInnerHeight, setWindowInnerHeight] = useState(window.innerHeight)
     const renderTarget = useFBO()
     const renderTarget2 = useFBO()
-    const renderTargetMenu = useFBO()
+    
     const renderSceneRef = useRef({
         scene: useRef(),
         material: useRef()
@@ -57,17 +58,24 @@ export default function MainScene(props) {
             camera: useRef()
         },
     ])
-    const sceneMenuRef = useRef()
+    const sceneMenuRef = useRef({
+        scene: useRef(),
+        camera: useRef()
+    })
 
     // Функция скролла
     const scrollFunction = useCallback((progressTo) => (e) => {
-        // Включаем скролл, только если камера вернулась на место
-        if(scenes.current[currentScene.current].camera.current.position.z <= props.defaultCameraPosition.current && letScrollProgress.current === true) {
+        if (currentScene.current === 0 && letScrollScene.current != 1) {
             progressTo.current -= (e.deltaY / 1000)
         }
-        // Скролл первой сцены
-        if(currentScene.current === 0 && letScrollProgress.current === false) {
-            scrollScene1.current += (e.deltaY / 500)
+        if (currentScene.current === 1 && letScrollScene.current != 2) {
+            progressTo.current -= (e.deltaY / 1000)
+        }
+        if (currentScene.current === 2 && letScrollScene.current != 3) {
+            progressTo.current -= (e.deltaY / 1000)
+        }
+        if (currentScene.current === 3 && letScrollScene.current != 4) {
+            progressTo.current -= (e.deltaY / 1000)
         }
     }, [progressTo]);
 
@@ -77,6 +85,7 @@ export default function MainScene(props) {
     
         if (progress.current > 1) {
             progressTo.current = (progressTo.current % 1) * 0.25;
+            // progressTo.current = 0
             progress.current = 0;
             currentScene.current = (currentScene.current + 1) % scenes.current.length;
             nextScene.current = (currentScene.current + 1) % scenes.current.length;
@@ -85,10 +94,10 @@ export default function MainScene(props) {
             }
         } else if (progress.current < 0) {
             progressTo.current = 1 - ((progressTo.current % 1) * 0.25);
+            // progressTo.current = 1
             progress.current = 1;
             currentScene.current = (currentScene.current - 1 + scenes.current.length) % scenes.current.length;
             nextScene.current = (currentScene.current + 1) % scenes.current.length;
-            // letScrollProgress.current = false
             if (currentScene.current === 0) {
                 nextScene.current = 1;
             }
@@ -147,19 +156,22 @@ export default function MainScene(props) {
         }
     }, [scenes.current[0].scene.current, scenes.current[1].scene.current, scenes.current[2].scene.current, windowInnerWidth])
 
+
+
     // РЕНДЕРЕР
     useFrame(({gl, scene, camera}, delta) => {       
         // Рендер сцен, если меню закрыто
         if(props.activeSceneMenu.current === false) {
             switchScenes()
-            gl.setRenderTarget(renderTarget)
             renderSceneRef.current.scene.current.visible = false
+            sceneMenuRef.current.scene.current.visible = false
+
+            gl.setRenderTarget(renderTarget)
             scenes.current[currentScene.current].scene.current.visible = true
             scenes.current[nextScene.current].scene.current.visible = false
             gl.render(scenes.current[currentScene.current].scene.current, scenes.current[currentScene.current].camera.current)
             
             gl.setRenderTarget(renderTarget2)
-            renderSceneRef.current.scene.current.visible = false
             scenes.current[currentScene.current].scene.current.visible = false
             scenes.current[nextScene.current].scene.current.visible = true
             gl.render(scenes.current[nextScene.current].scene.current, scenes.current[nextScene.current].camera.current)
@@ -167,61 +179,82 @@ export default function MainScene(props) {
             scenes.current[currentScene.current].scene.current.visible = false
             scenes.current[nextScene.current].scene.current.visible = false
 
-            renderSceneRef.current.material.current.uniforms.tex.value = renderTarget.texture
-            renderSceneRef.current.material.current.uniforms.tex2.value = renderTarget2.texture
+            // renderSceneRef.current.material.current.uniforms.tex.value = renderTarget.texture
+            // renderSceneRef.current.material.current.uniforms.tex2.value = renderTarget2.texture
 
-            sceneMenuRef.current.visible = false
             renderSceneRef.current.scene.current.visible = true
+
+            // gl.setRenderTarget(renderSceneTarget)
+            // gl.render(scene, camera)
+            // blurEffectComponentRef.current.tex = renderSceneTarget.texture
+
+            // gl.setRenderTarget(renderSceneTarget)
+            // gl.render(scene, camera)
+            // blurEffectComponentRef.current.depthTex = renderSceneTarget.depthTexture
+            // console.log(renderSceneTarget, renderTarget)
+            
     
             // МОЖНО ЗАКОМЕНТИРОВАТЬ ЕСЛИ EFFECT COMPOSER ВКЛЮЧЕН.
             gl.setRenderTarget(null)
 
-        } else { //Рендер сцены меню, если меню открыто
+        } 
+        else {
             renderSceneRef.current.scene.current.visible = false
-            gl.setRenderTarget(renderTargetMenu)
-            sceneMenuRef.current.visible = true
-            gl.render(sceneMenuRef.current, camera)
+            scenes.current[currentScene.current].scene.current.visible = false
+            scenes.current[nextScene.current].scene.current.visible = false
             
-            sceneMenuRef.current.visible = false
-            renderSceneRef.current.scene.current.visible = true
+            gl.setRenderTarget(renderTarget)
+            sceneMenuRef.current.scene.current.visible = true
+            gl.render(sceneMenuRef.current.scene.current, sceneMenuRef.current.camera.current)
+            
+            gl.setRenderTarget(renderTarget2)
+            gl.render(sceneMenuRef.current.scene.current, sceneMenuRef.current.camera.current)
 
+            // renderSceneRef.current.material.current.uniforms.tex.value = renderTarget.texture
+            // renderSceneRef.current.material.current.uniforms.tex2.value = renderTarget2.texture
+
+            sceneMenuRef.current.scene.current.visible = false
+            renderSceneRef.current.scene.current.visible = true
+    
             // МОЖНО ЗАКОМЕНТИРОВАТЬ ЕСЛИ EFFECT COMPOSER ВКЛЮЧЕН.
             gl.setRenderTarget(null)
         }
         if (renderSceneRef.current != null) {
             renderSceneRef.current.material.current.map = renderTarget.texture
-            renderSceneRef.current.material.current.progression = progress.current
+            renderSceneRef.current.material.current.progress = progress.current
         }
 
         // Двигаем камеру всех сцен, если открыли меню
         // checkCamerasZ()
     })
-
+    
+    // // const environmentMap = useLoader(RGBELoader, '/backgrounds/backLavaweb.hdr')
     // useFrame(({scene}) =>{
-    //     // scene.background = bg
+    //     // scene.background = environmentMap
     //     scenes.current[0].scene.current.visible = true
     // })
+
     return <>
         <RenderScene ref={renderSceneRef}
         renderTarget={renderTarget}
         renderTarget2={renderTarget2}
-        renderTargetMenu={renderTargetMenu}
         progress={progress}
         activeSceneMenu={props.activeSceneMenu}
         />
         <Scene1 ref={scenes.current[0]}
-        currentScene={currentScene} nextScene={nextScene} progress={progress} scenes={scenes} scrollScene1={scrollScene1} activeMenu={props.activeMenu}
-        letScrollProgress={letScrollProgress}
+        currentScene={currentScene} nextScene={nextScene} progress={progress} scenes={scenes} activeMenu={props.activeMenu}
+        letScrollScene={letScrollScene}
         />
         <Scene2 ref={scenes.current[1]} currentScene={currentScene} nextScene={nextScene} progress={progress} scenes={scenes}/>
         <Scene3 ref={scenes.current[2]} currentScene={currentScene} nextScene={nextScene} progress={progress} scenes={scenes}/>
         <SceneMenu ref={sceneMenuRef} activeMenu={props.activeMenu} hoveredElement={props.hoveredElement}/>
+        {/* <OrbitControls /> */}
         <EffectComposer 
         multisampling={0} 
         disableNormalPass={true}
         depthBuffer={true}
         stencilBuffer={true}
-        // scene={renderSceneRef.current.scene.current}
+        // scene={scenes.current[0]}
         scene={null}
         resolutionScale={0.5}
         >
@@ -230,9 +263,9 @@ export default function MainScene(props) {
             mipMap={false}
             kernelSize={KernelSize.VERY_LARGE}
             luminanceThreshold={1}
-            luminanceSmoothing={0.1}
+            luminanceSmoothing={2}
             // opacity={3}
-            intensity={2}
+            intensity={1}
             />
             <Noise opacity={0.025} />
             <Vignette eskil={false} offset={0.1} darkness={1.1} />

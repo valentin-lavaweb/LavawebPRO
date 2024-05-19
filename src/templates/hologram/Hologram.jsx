@@ -3,16 +3,16 @@ import { useGLTF } from "@react-three/drei"
 import { useFrame } from "@react-three/fiber"
 import { useEffect, useRef } from "react"
 
-import hologramVertexShader from './shaders/vertex.glsl'
-import hologramFragmentShader from './shaders/fragment.glsl'
+import hologramVertexShader from './shaders/vertexScene1.glsl'
+import hologramFragmentShader from './shaders/fragmentScene1.glsl'
 
 export default function Hologram(props) {
     const materialRef = useRef()
     const hologramRef = useRef()
-    const hologramModel = useGLTF('/models/rocket.glb')
+    const hologramModel = useGLTF('/models/screen1/SphereBackground.glb')
 
     useEffect(() => {
-        // console.log(materialRef)
+        console.log(hologramModel)
         // hologramRef.current.rotation.x = Math.PI
     }, [])
 
@@ -23,7 +23,7 @@ export default function Hologram(props) {
     })
 
     return <>
-        <mesh ref={hologramRef} {...hologramModel.scene.children[0]} scale={1} rotation={[0, 0, 0]} position={[0, -8, 0]}>
+        <mesh ref={hologramRef} {...hologramModel.scene.children[0].children[0]} scale={1} rotation={[0, 0, 0]} position={[0, 0, 0]}>
             <shaderMaterial ref={materialRef}
             vertexShader={hologramVertexShader}
             fragmentShader={hologramFragmentShader}
@@ -34,7 +34,7 @@ export default function Hologram(props) {
             uniforms={
                 {
                     uTime: new THREE.Uniform(0),
-                    uColor: new THREE.Uniform(new THREE.Vector3(1.0, 1.0, 5.0))
+                    uColor: new THREE.Uniform(new THREE.Vector3(1.0, 1.0, 10.0))
                 }
             }/>
         </mesh>

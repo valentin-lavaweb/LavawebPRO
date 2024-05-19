@@ -30,7 +30,8 @@ export default function App() {
     <Canvas
       camera={{
         position: [0, 0, defaultCameraPosition.current],
-        fov: 75
+        fov: 50,
+        far: 10000
       }}
       dpr={1}
       // linear={true}
@@ -38,7 +39,7 @@ export default function App() {
       // orthographic
       // scene={null}
     >
-      <color attach="background" args={["#ff0000"]} />
+      <color attach="background" args={["#000000"]} />
       {/* <fog color="#131e25" attach="fog" near={8} far={30} /> */}
       <Suspense fallback={<Html center>Loading.</Html>}>
         <MainScene displacementCanvasRef={displacementCanvasRef}
@@ -56,6 +57,5 @@ export default function App() {
       language={language}
       hoveredElement={hoveredElement}
     />
-
   </>
 }

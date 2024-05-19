@@ -1,11 +1,12 @@
-import { useFrame } from "@react-three/fiber"
+import { useFrame, useThree } from "@react-three/fiber"
 import { forwardRef, useEffect, } from "react"
 import MorphCursorParticles from '../../templates/morphCursorParticles/MorphCursorParticles.jsx'
 import { easing } from 'maath'
 
 export default forwardRef( function SceneMenu(props, ref) {
+  const three = useThree()
     useEffect(() => {
-      ref.current.visible = false
+      ref.current.scene.current.visible = false
     }, [])
 
     useFrame((renderer, delta) => {
@@ -14,8 +15,9 @@ export default forwardRef( function SceneMenu(props, ref) {
       // renderer.camera.lookAt(0, 0, 0)
     })
     return <>
-    <scene ref={ref}>
+    <scene ref={ref.current.scene}>
         <color attach="background" args={["#181c20"]} />
+        <perspectiveCamera {...three.camera} ref={ref.current.camera}/>
         <MorphCursorParticles hoveredElement={props.hoveredElement} activeMenu={props.activeMenu}/>
     </scene>
     </>

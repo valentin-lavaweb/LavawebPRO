@@ -19,7 +19,7 @@ void main()
     glitchStrength /= 3.0;
     // float glitchStrength = sin((uTime * 100.0) - modelPosition.y);
     glitchStrength = smoothstep(0.35, 1.0, glitchStrength);
-    glitchStrength *= 0.3;
+    glitchStrength *= 3.0;
     modelPosition.x += (random2D(modelPosition.xz + uTime) - 0.5) * glitchStrength;
     modelPosition.z += (random2D(modelPosition.zx + uTime) - 0.5) * glitchStrength;
     

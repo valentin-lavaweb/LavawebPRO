@@ -5,20 +5,14 @@ import { shaderMaterial } from "@react-three/drei";
 
 export default forwardRef(function RenderScene(props, ref) {
     useEffect(()=>{
-        ref.current.scene.current.visible = false
+        // ref.current.scene.current.visible = false
     }, [])
-
-    useFrame(() => {
-        ref.current.material.current.uniforms.activeSceneMenu.value = props.activeSceneMenu.current
-    })
 
     const TransitionMaterial = shaderMaterial(
     {
-        progression: undefined,
+        progress: undefined,
         tex: undefined,
         tex2: undefined,
-        texMenu: undefined,
-        activeSceneMenu: props.activeSceneMenu.current,
         darkness: 1.0,
     },
     /*glsl*/ `
@@ -32,10 +26,8 @@ export default forwardRef(function RenderScene(props, ref) {
         varying vec2 vUv;
         uniform sampler2D tex;
         uniform sampler2D tex2;
-        uniform sampler2D texMenu;
-        uniform float progression;
+        uniform float progress;
         uniform float darkness;
-        uniform bool activeSceneMenu;
         // uniform int transition;
 
     
@@ -43,19 +35,14 @@ export default forwardRef(function RenderScene(props, ref) {
         void main() {    
             vec4 t = texture2D(tex, vUv);
             vec4 t1 = texture2D(tex2, vUv);
-            vec4 tMenu = texture2D(texMenu, vUv);
 
             // Calculate diagonal gradient
             float diagonal = (vUv.y / 1.45) - (vUv.x * 0.15);
-            float sweep = step(diagonal, progression - 0.225);
+            float sweep = step(diagonal, progress - 0.225);
         
             vec4 finalTexture = mix(t, t1, sweep);
             finalTexture.rgb *= darkness;
-            if (!activeSceneMenu) {
-                gl_FragColor = finalTexture;
-            } else {
-                gl_FragColor = tMenu;
-            };
+            gl_FragColor = finalTexture;
     
             #include <tonemapping_fragment>
             #include <colorspace_fragment>
@@ -74,9 +61,7 @@ export default forwardRef(function RenderScene(props, ref) {
             ref={ref.current.material}
             tex={props.renderTarget.texture}
             tex2={props.renderTarget2.texture}
-            texMenu={props.renderTargetMenu.texture}
-            progression={props.progress.current}
-            activeSceneMenu={props.activeSceneMenu.current}
+            progress={props.progress.current}
             darkness={1.0}
             // toneMapped={false}
             />
