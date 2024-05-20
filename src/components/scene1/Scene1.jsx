@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { useFrame, useThree } from "@react-three/fiber"
-import { forwardRef, useCallback, useEffect, useRef, useState } from "react"
+import { forwardRef, useCallback, useEffect, useRef } from "react"
 import CurvesModel from '../../templates/curvesModel/CurvesModel.jsx'
 import { OrbitControls } from '@react-three/drei'
 import SchemesModel from '../../templates/schemes/SchemesModel.jsx'
@@ -12,35 +12,39 @@ import { easing } from 'maath'
 export default forwardRef(function Scene1(props, ref) {
     const three = useThree()
     const groupRef = useRef()
-    const scene1Progress = useRef(0.0)
+    const sceneProgress = useRef(0.0)
     const targetProgress = useRef(0.0)
     const position = useRef(new THREE.Vector3())
     const targetPosition = useRef(new THREE.Vector3())
     const cameraQuaternion = useRef(new THREE.Quaternion())
     const targetQuaternion = useRef(new THREE.Quaternion())
-
-    // ORBIT-CONTROLS
-    // const orbitRef = useRef()
-    // useEffect(() => {
-    //   orbitRef.current.object = ref.camera.current
-    //   // console.log(ref.camera.current.rotation);
-    //   // ref.camera.current.rotation = targetPoints[0]
-    // }, [])
+    const lookAtOffset = useRef(new THREE.Vector3())
+    const currentPointer = useRef(new THREE.Vector2())
+    const targetPointer = useRef(new THREE.Vector2())
+    const lookAtPosition = useRef(new THREE.Vector3())
+    const currentLookAtPosition = useRef(new THREE.Vector3())
+    const factor = 3
 
     // КРИВАЯ
     const positionPoints = [
-        new THREE.Vector3(4.39, 2.93, 2.14),
-        new THREE.Vector3(3.13, -1.28, 5.33),
+        new THREE.Vector3(0, 3.45, 1),
+        new THREE.Vector3(0, 1.6, 1),
+        new THREE.Vector3(0, 0.0, 5),
+        new THREE.Vector3(-3, -1, 5),
         new THREE.Vector3(-10.43, -5.21, 9.01),
-        new THREE.Vector3(1.67, -4.65, 8.47),
-        new THREE.Vector3(8.36, -9.06, 8.74)
+        new THREE.Vector3(1.67, -9.0, 10.47),
+        new THREE.Vector3(7.0, -9.2, 9.5),
+        new THREE.Vector3(7.0, -12.06, 9.5)
     ]
     const targetPoints = [
-        new THREE.Vector3(1.11, 3.54, -1.94),
-        new THREE.Vector3(-0.56, 1.38, -1.18),
-        new THREE.Vector3(-2.68, -2.45, 0.27),
-        new THREE.Vector3(-2.88, -6.05, 1.58),
-        new THREE.Vector3(0.75, -3.85, 0.11)
+        new THREE.Vector3(0, 3.4, -10),
+        new THREE.Vector3(0, 1.6, -10),
+        new THREE.Vector3(0, 3.5, -10),
+        new THREE.Vector3(2.5, 3.5, -10),
+        new THREE.Vector3(-3, -2.45, 0.27),
+        new THREE.Vector3(-3.5, -3.05, 1.58),
+        new THREE.Vector3(-3.5, -2.85, 0.11),
+        new THREE.Vector3(-3.5, -4.85, 0.11)
     ]
     const positionCurve = new THREE.CatmullRomCurve3(positionPoints)
     const targetCurve = new THREE.CatmullRomCurve3(targetPoints)
@@ -50,17 +54,33 @@ export default forwardRef(function Scene1(props, ref) {
     }, [])
 
     const scrollFunction = useCallback((targetProgress) => (e) => {
-        if (props.letScrollScene.current === 1) {
-            targetProgress.current -= (e.deltaY / 5000)
-            targetProgress.current = Math.min(targetProgress.current, 1)
-            targetProgress.current = Math.max(0, targetProgress.current)
-            if (targetProgress.current === 1) {
-                props.letScrollScene.current = 2
-            }
-            if (targetProgress.current === 0) {
-                props.letScrollScene.current = 3
+      if (props.currentScene.current === 0 && props.letScrollScene.current === true && props.progress.current === 0) {
+        targetProgress.current -= (e.deltaY / 10000)
+        targetProgress.current = Math.min(targetProgress.current, 1)
+        targetProgress.current = Math.max(0.001, targetProgress.current)
+        if (sceneProgress.current >= 0.99) {
+          if (e.deltaY < 0) {
+            props.letScrollScene.current = false
+          }
+        }
+        if (sceneProgress.current <= 0.01) {
+          if (e.deltaY > 0) {
+            props.letScrollScene.current = false
+          }
+        }
+    }
+    if (props.letScrollScene.current === false) {
+        if (props.currentScene.current === 0 && sceneProgress.current <= 0.01) {
+            if (e.deltaY < 0) {
+                props.letScrollScene.current = true
             }
         }
+        if (props.currentScene.current === 0 && sceneProgress.current >= 0.99) {
+            if (e.deltaY > 0) {
+                props.letScrollScene.current = true
+            }
+        }
+    } 
     }, [targetProgress])
 
     // Включаем скролл
@@ -73,24 +93,52 @@ export default forwardRef(function Scene1(props, ref) {
         }
     }, [])
 
-    useFrame((state, delta) => {
-        // Плавно интерполируем scene1Progress к targetProgress
-        scene1Progress.current = THREE.MathUtils.lerp(scene1Progress.current, targetProgress.current, delta * 5)
+    useFrame((renderer, delta) => {
+        // if (props.currentScene.current === 0) {
+        //     console.log(`scene1:
+        //     scene1Progress: ${sceneProgress.current}
+        //     progress: ${props.progress.current}
+        //     letScrollScene: ${props.letScrollScene.current}`
+        //     )
+        // }
+        if (props.currentScene.current === 1) {
+            targetProgress.current = 1
+        }
+        if (props.currentScene.current === props.scenes.current.length - 1) {
+            targetProgress.current = 0
+        }
+      // Плавно интерполируем sceneProgress к targetProgress
+      sceneProgress.current = THREE.MathUtils.lerp(sceneProgress.current, targetProgress.current, delta * 5)
+      sceneProgress.current = Math.min(1, sceneProgress.current)
+      sceneProgress.current = Math.max(0, sceneProgress.current)
 
-        // Получаем точку на кривой в зависимости от значения progress
-        positionCurve.getPointAt(scene1Progress.current, position.current)
-        targetCurve.getPointAt(scene1Progress.current, targetPosition.current)
+      // Получаем точку на кривой в зависимости от значения progress
+      positionCurve.getPointAt(sceneProgress.current, position.current)
+      targetCurve.getPointAt(sceneProgress.current, targetPosition.current)
 
-        // Двигаем камеру к точке на кривой с использованием lerp для плавной интерполяции
-        ref.camera.current.position.lerp(position.current, delta * 0.7)
+      // Двигаем камеру к точке на кривой с использованием lerp для плавной интерполяции
+      ref.camera.current.position.lerp(position.current, delta * 1.25)
 
-        // Обновляем кватернион цели
-        ref.camera.current.lookAt(targetPosition.current)
-        ref.camera.current.getWorldQuaternion(targetQuaternion.current)
+      // Плавное изменение кватерниона камеры с использованием slerp
+      ref.camera.current.lookAt(targetPosition.current)
+      ref.camera.current.getWorldQuaternion(targetQuaternion.current)
+      cameraQuaternion.current.slerp(targetQuaternion.current, delta * 3.25)
+      ref.camera.current.quaternion.copy(cameraQuaternion.current)
 
-        // Плавное изменение кватерниона камеры с использованием slerp
-        cameraQuaternion.current.slerp(targetQuaternion.current, delta * 0.7)
-        ref.camera.current.quaternion.copy(cameraQuaternion.current)
+      // Плавное движение курсора
+      targetPointer.current.set(renderer.pointer.x, renderer.pointer.y)
+      currentPointer.current.lerp(targetPointer.current, delta * 5)
+
+      // Обновляем смещение для lookAt
+      lookAtOffset.current.set(
+          targetPosition.current.x + (currentPointer.current.x) * factor,
+          targetPosition.current.y + (currentPointer.current.y) * factor,
+          targetPosition.current.z
+      )
+
+      // Плавное обновление позиции lookAt
+      lookAtPosition.current.lerp(lookAtOffset.current, delta * 5)
+      ref.camera.current.lookAt(lookAtPosition.current)
     })
 
     return (

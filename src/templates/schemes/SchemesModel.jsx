@@ -119,7 +119,7 @@ export default function SchemesModel(props) {
         {
             time:  0,
             color: new THREE.Vector3(1, 1, 5),
-            brightness: 8.0,
+            brightness: 5.0,
             sizeScale: 1.0,
             cycleTime: 4.0
         },

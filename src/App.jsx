@@ -31,7 +31,8 @@ export default function App() {
       camera={{
         position: [0, 0, defaultCameraPosition.current],
         fov: 50,
-        far: 10000
+        far: 10000,
+        near: 0.1
       }}
       dpr={1}
       // linear={true}

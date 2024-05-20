@@ -71,12 +71,13 @@ export default function Scene1Model(props) {
                 />
             </React.Fragment>
         ))} */}
-        <ambientLight intensity={1} />
-        <directionalLight intensity={0.2} color={color} position={[0, 10, 3]}/>
+        {/* <ambientLight intensity={1} /> */}
+        <directionalLight intensity={0.1} color={color} position={[-10, 10, 5]}/>
+        <directionalLight intensity={0.1} color={color} position={[0, 10, 5]}/>
 
         {/* MODEL */}
         <primitive object={schemesModel.scene} />
 
-        <Grid position={[0, -12.01, 0]} args={[10.5, 10.5]} {...gridConfig} />
+        <Grid position={[0, -12.01, 0]} args={[20.5, 20.5]} {...gridConfig} />
     </>
 }

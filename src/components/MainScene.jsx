@@ -28,7 +28,7 @@ const SceneMenu = React.lazy(() => import("./sceneMenu/SceneMenu.jsx"));
 export default function MainScene(props) {
     const three = useThree()
 
-    const letScrollScene = useRef(1);
+    const letScrollScene = useRef(true);
     const progressTo = useRef(0.0);
     const progress = useRef(0.0);
     const currentScene = useRef(0)
@@ -65,16 +65,7 @@ export default function MainScene(props) {
 
     // Функция скролла
     const scrollFunction = useCallback((progressTo) => (e) => {
-        if (currentScene.current === 0 && letScrollScene.current != 1) {
-            progressTo.current -= (e.deltaY / 1000)
-        }
-        if (currentScene.current === 1 && letScrollScene.current != 2) {
-            progressTo.current -= (e.deltaY / 1000)
-        }
-        if (currentScene.current === 2 && letScrollScene.current != 3) {
-            progressTo.current -= (e.deltaY / 1000)
-        }
-        if (currentScene.current === 3 && letScrollScene.current != 4) {
+        if (letScrollScene.current === false) {
             progressTo.current -= (e.deltaY / 1000)
         }
     }, [progressTo]);
@@ -84,8 +75,8 @@ export default function MainScene(props) {
         easing.damp(progress, 'current', progressTo.current, 0.6);
     
         if (progress.current > 1) {
-            progressTo.current = (progressTo.current % 1) * 0.25;
-            // progressTo.current = 0
+            // progressTo.current = (progressTo.current % 1) * 0.25;
+            progressTo.current = 0
             progress.current = 0;
             currentScene.current = (currentScene.current + 1) % scenes.current.length;
             nextScene.current = (currentScene.current + 1) % scenes.current.length;
@@ -93,8 +84,8 @@ export default function MainScene(props) {
                 nextScene.current = 0;
             }
         } else if (progress.current < 0) {
-            progressTo.current = 1 - ((progressTo.current % 1) * 0.25);
-            // progressTo.current = 1
+            // progressTo.current = 1 - ((progressTo.current % 1) * 0.25);
+            progressTo.current = 1
             progress.current = 1;
             currentScene.current = (currentScene.current - 1 + scenes.current.length) % scenes.current.length;
             nextScene.current = (currentScene.current + 1) % scenes.current.length;
@@ -245,8 +236,12 @@ export default function MainScene(props) {
         currentScene={currentScene} nextScene={nextScene} progress={progress} scenes={scenes} activeMenu={props.activeMenu}
         letScrollScene={letScrollScene}
         />
-        <Scene2 ref={scenes.current[1]} currentScene={currentScene} nextScene={nextScene} progress={progress} scenes={scenes}/>
-        <Scene3 ref={scenes.current[2]} currentScene={currentScene} nextScene={nextScene} progress={progress} scenes={scenes}/>
+        <Scene2 ref={scenes.current[1]} currentScene={currentScene} nextScene={nextScene} progress={progress} scenes={scenes}
+        letScrollScene={letScrollScene}
+        />
+        <Scene3 ref={scenes.current[2]} currentScene={currentScene} nextScene={nextScene} progress={progress} scenes={scenes}
+        letScrollScene={letScrollScene}
+        />
         <SceneMenu ref={sceneMenuRef} activeMenu={props.activeMenu} hoveredElement={props.hoveredElement}/>
         {/* <OrbitControls /> */}
         <EffectComposer 

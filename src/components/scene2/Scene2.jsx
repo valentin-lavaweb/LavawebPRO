@@ -1,18 +1,82 @@
+import * as THREE from 'three'
 import { useFrame, useThree } from "@react-three/fiber"
 import { easing } from "maath"
-import { forwardRef, useEffect, useRef } from "react"
+import { forwardRef, useCallback, useEffect, useRef } from "react"
+import VirtualScroll from 'virtual-scroll'
 
 export default forwardRef( function Scene2(props, ref) {
     const three = useThree()
     const groupRef = useRef()
+    const sceneProgress = useRef(0.0)
+    const targetProgress = useRef(0.0)
     useEffect(() => {
         ref.scene.current.visible = false
     }, [])
 
-    useFrame(({pointer}) => {
-        // easing.damp(ref.camera.current.position, 'x', -pointer.x * 0.25, 0.2);
-        // easing.damp(ref.camera.current.position, 'y', -pointer.y * 0.25, 0.2);
-        // ref.camera.current.lookAt(0, 0, 0)
+
+    // Скролл
+    const scrollFunction = useCallback((targetProgress) => (e) => {
+        if (props.currentScene.current === 1 && props.letScrollScene.current === true && props.progress.current === 0) {
+            targetProgress.current -= (e.deltaY / 1000)
+            targetProgress.current = Math.min(targetProgress.current, 1)
+            targetProgress.current = Math.max(0, targetProgress.current)
+            if (sceneProgress.current >= 0.99) {
+              if (e.deltaY < 0) {
+                props.letScrollScene.current = false
+              }
+            }
+            if (sceneProgress.current <= 0.01) {
+              if (e.deltaY > 0) {
+                props.letScrollScene.current = false
+              }
+            }
+        }
+        if (props.letScrollScene.current === false) {
+            if (props.currentScene.current === 1 && sceneProgress.current <= 0.01) {
+                if (e.deltaY < 0) {
+                    props.letScrollScene.current = true
+                }
+            }
+            if (props.currentScene.current === 1 && sceneProgress.current >= 0.99) {
+                if (e.deltaY > 0) {
+                    props.letScrollScene.current = true
+                }
+            }
+        } 
+    }, [targetProgress])
+
+    // Включаем скролл
+    useEffect(() => {
+        const scrollEventHandler = scrollFunction(targetProgress);
+        const vs2 = new VirtualScroll()
+        vs2.on(scrollEventHandler);
+        return () => {
+            vs2.off(scrollEventHandler);
+        }
+    }, [])
+
+    useFrame((renderer, delta) => {
+      // if (props.currentScene.current === 2) {
+        console.log(
+            `scene3:
+            scene3Progress: ${sceneProgress.current}
+            scene3TargetProgress: ${targetProgress.current}
+            progress: ${props.progress.current}
+            letScrollScene: ${props.letScrollScene.current}`
+          )
+        // }
+        if (props.currentScene.current === 2) {
+          targetProgress.current = 1
+        }
+        if (props.currentScene.current === 0 && props.progress.current === 0) {
+          targetProgress.current = 0
+        }
+        // Плавно интерполируем sceneProgress к targetProgress
+        sceneProgress.current = THREE.MathUtils.lerp(sceneProgress.current, targetProgress.current, delta * 5)
+        sceneProgress.current = Math.min(1, sceneProgress.current)
+        sceneProgress.current = Math.max(0, sceneProgress.current)
+
+
         if (props.currentScene.current === 1) {
           easing.damp(groupRef.current.position, 'y', (props.progress.current - 0) * 2, 0.05);
         } else if (props.currentScene.current === 0) {
