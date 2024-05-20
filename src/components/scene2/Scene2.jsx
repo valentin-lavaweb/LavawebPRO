@@ -16,33 +16,47 @@ export default forwardRef( function Scene2(props, ref) {
 
     // Скролл
     const scrollFunction = useCallback((targetProgress) => (e) => {
-        if (props.currentScene.current === 1 && props.letScrollScene.current === true && props.progress.current === 0) {
-            targetProgress.current -= (e.deltaY / 1000)
-            targetProgress.current = Math.min(targetProgress.current, 1)
-            targetProgress.current = Math.max(0, targetProgress.current)
-            if (sceneProgress.current >= 0.99) {
-              if (e.deltaY < 0) {
-                props.letScrollScene.current = false
-              }
-            }
-            if (sceneProgress.current <= 0.01) {
-              if (e.deltaY > 0) {
-                props.letScrollScene.current = false
-              }
+        // ПРИ СКРОЛЛЕ ВНИЗ
+        if (e.deltaY < 0) {
+            // ЕСЛИ НАХОДИМСЯ НА ТЕКУЩЕЙ СЦЕНЕ И ОНА ОТКРЫТА ЦЕЛИКОМ
+            if (props.currentScene.current === 1 && props.progress.current === 0) {
+                // ЕСЛИ РАЗРЕШЕН СКРОЛЛ СЦЕНЫ
+                if (props.letScrollScene.current === true){
+                    targetProgress.current -= (e.deltaY / 10000)
+                    targetProgress.current = Math.min(targetProgress.current, 1)
+                    targetProgress.current = Math.max(0.001, targetProgress.current)
+                }
+                // ЕСЛИ СКРОЛЛ СЦЕНЫ ВНИЗ ЗАКОНЧИЛСЯ - ЗАПРЕЩАЕМ СКРОЛЛ СЦЕНЫ
+                if (sceneProgress.current >= 0.99 && props.letScrollScene.current === true) {
+                    props.letScrollScene.current = false
+                }
+                // ЕСЛИ СКРОЛЛ СЦЕНЫ В НАЧАЛЕ - ВКЛЮЧАЕМ СКРОЛЛ СЦЕНЫ
+                if (props.letScrollScene.current === false && sceneProgress.current <= 0.01) {
+                    props.letScrollScene.current = true
+                }
             }
         }
-        if (props.letScrollScene.current === false) {
-            if (props.currentScene.current === 1 && sceneProgress.current <= 0.01) {
-                if (e.deltaY < 0) {
+
+        // ПРИ СКРОЛЛЕ ВВЕРХ
+        if (e.deltaY > 0) {
+            // ЕСЛИ НАХОДИМСЯ НА ТЕКУЩЕЙ СЦЕНЕ И ОНА ОТКРЫТА ЦЕЛИКОМ
+            if (props.currentScene.current === 1 && props.progress.current === 0) {
+                // ЕСЛИ РАЗРЕШЕН СКРОЛЛ СЦЕНЫ
+                if (props.letScrollScene.current === true){
+                    targetProgress.current -= (e.deltaY / 10000)
+                    targetProgress.current = Math.min(targetProgress.current, 1)
+                    targetProgress.current = Math.max(0.001, targetProgress.current)
+                }
+                // ЕСЛИ СКРОЛЛ СЦЕНЫ ВВЕРХ ЗАКОНЧИЛСЯ - ЗАПРЕЩАЕМ СКРОЛЛ СЦЕНЫ
+                if (sceneProgress.current <= 0.01 && props.letScrollScene.current === true) {
+                    props.letScrollScene.current = false
+                }
+                // ЕСЛИ СКРОЛЛ СЦЕНЫ В КОНЦЕ - ВКЛЮЧАЕМ СКРОЛЛ СЦЕНЫ
+                if (props.letScrollScene.current === false && sceneProgress.current >= 0.99) {
                     props.letScrollScene.current = true
                 }
             }
-            if (props.currentScene.current === 1 && sceneProgress.current >= 0.99) {
-                if (e.deltaY > 0) {
-                    props.letScrollScene.current = true
-                }
-            }
-        } 
+        }
     }, [targetProgress])
 
     // Включаем скролл
@@ -58,23 +72,24 @@ export default forwardRef( function Scene2(props, ref) {
     useFrame((renderer, delta) => {
       // if (props.currentScene.current === 2) {
         console.log(
-            `scene3:
-            scene3Progress: ${sceneProgress.current}
-            scene3TargetProgress: ${targetProgress.current}
+            `
+            currentScene: ${props.currentScene.current}
             progress: ${props.progress.current}
-            letScrollScene: ${props.letScrollScene.current}`
-          )
-        // }
+            scene2Progress: ${sceneProgress.current}
+            scene2TargetProgress: ${targetProgress.current}
+            letScrollScene: ${props.letScrollScene.current}
+            `
+        )
         if (props.currentScene.current === 2) {
           targetProgress.current = 1
         }
-        if (props.currentScene.current === 0 && props.progress.current === 0) {
+        if (props.currentScene.current === 0) {
           targetProgress.current = 0
         }
         // Плавно интерполируем sceneProgress к targetProgress
         sceneProgress.current = THREE.MathUtils.lerp(sceneProgress.current, targetProgress.current, delta * 5)
         sceneProgress.current = Math.min(1, sceneProgress.current)
-        sceneProgress.current = Math.max(0, sceneProgress.current)
+        sceneProgress.current = Math.max(0.001, sceneProgress.current)
 
 
         if (props.currentScene.current === 1) {

@@ -34,7 +34,7 @@ export default forwardRef(function Scene1(props, ref) {
         new THREE.Vector3(-10.43, -5.21, 9.01),
         new THREE.Vector3(1.67, -9.0, 10.47),
         new THREE.Vector3(7.0, -9.2, 9.5),
-        new THREE.Vector3(7.0, -12.06, 9.5)
+        new THREE.Vector3(7.0, -12.56, 9.5)
     ]
     const targetPoints = [
         new THREE.Vector3(0, 3.4, -10),
@@ -54,33 +54,47 @@ export default forwardRef(function Scene1(props, ref) {
     }, [])
 
     const scrollFunction = useCallback((targetProgress) => (e) => {
-      if (props.currentScene.current === 0 && props.letScrollScene.current === true && props.progress.current === 0) {
-        targetProgress.current -= (e.deltaY / 10000)
-        targetProgress.current = Math.min(targetProgress.current, 1)
-        targetProgress.current = Math.max(0.001, targetProgress.current)
-        if (sceneProgress.current >= 0.99) {
-          if (e.deltaY < 0) {
-            props.letScrollScene.current = false
-          }
-        }
-        if (sceneProgress.current <= 0.01) {
-          if (e.deltaY > 0) {
-            props.letScrollScene.current = false
-          }
-        }
-    }
-    if (props.letScrollScene.current === false) {
-        if (props.currentScene.current === 0 && sceneProgress.current <= 0.01) {
-            if (e.deltaY < 0) {
-                props.letScrollScene.current = true
+        // ПРИ СКРОЛЛЕ ВНИЗ
+        if (e.deltaY < 0) {
+            // ЕСЛИ НАХОДИМСЯ НА ТЕКУЩЕЙ СЦЕНЕ И ОНА ОТКРЫТА ЦЕЛИКОМ
+            if (props.currentScene.current === 0 && props.progress.current === 0) {
+                // ЕСЛИ РАЗРЕШЕН СКРОЛЛ СЦЕНЫ
+                if (props.letScrollScene.current === true){
+                    targetProgress.current -= (e.deltaY / 10000)
+                    targetProgress.current = Math.min(targetProgress.current, 1)
+                    targetProgress.current = Math.max(0.001, targetProgress.current)
+                }
+                // ЕСЛИ СКРОЛЛ СЦЕНЫ ВНИЗ ЗАКОНЧИЛСЯ - ЗАПРЕЩАЕМ СКРОЛЛ СЦЕНЫ
+                if (sceneProgress.current >= 0.99 && props.letScrollScene.current === true) {
+                    props.letScrollScene.current = false
+                }
+                // ЕСЛИ СКРОЛЛ СЦЕНЫ В НАЧАЛЕ - ВКЛЮЧАЕМ СКРОЛЛ СЦЕНЫ
+                if (props.letScrollScene.current === false && sceneProgress.current <= 0.01) {
+                    props.letScrollScene.current = true
+                }
             }
         }
-        if (props.currentScene.current === 0 && sceneProgress.current >= 0.99) {
-            if (e.deltaY > 0) {
-                props.letScrollScene.current = true
+
+        // ПРИ СКРОЛЛЕ ВВЕРХ
+        if (e.deltaY > 0) {
+            // ЕСЛИ НАХОДИМСЯ НА ТЕКУЩЕЙ СЦЕНЕ И ОНА ОТКРЫТА ЦЕЛИКОМ
+            if (props.currentScene.current === 0 && props.progress.current === 0) {
+                // ЕСЛИ РАЗРЕШЕН СКРОЛЛ СЦЕНЫ
+                if (props.letScrollScene.current === true){
+                    targetProgress.current -= (e.deltaY / 10000)
+                    targetProgress.current = Math.min(targetProgress.current, 1)
+                    targetProgress.current = Math.max(0.001, targetProgress.current)
+                }
+                // ЕСЛИ СКРОЛЛ СЦЕНЫ ВВЕРХ ЗАКОНЧИЛСЯ - ЗАПРЕЩАЕМ СКРОЛЛ СЦЕНЫ
+                if (sceneProgress.current <= 0.01 && props.letScrollScene.current === true) {
+                    props.letScrollScene.current = false
+                }
+                // ЕСЛИ СКРОЛЛ СЦЕНЫ В КОНЦЕ - ВКЛЮЧАЕМ СКРОЛЛ СЦЕНЫ
+                if (props.letScrollScene.current === false && sceneProgress.current >= 0.99) {
+                    props.letScrollScene.current = true
+                }
             }
         }
-    } 
     }, [targetProgress])
 
     // Включаем скролл
@@ -107,38 +121,38 @@ export default forwardRef(function Scene1(props, ref) {
         if (props.currentScene.current === props.scenes.current.length - 1) {
             targetProgress.current = 0
         }
-      // Плавно интерполируем sceneProgress к targetProgress
-      sceneProgress.current = THREE.MathUtils.lerp(sceneProgress.current, targetProgress.current, delta * 5)
-      sceneProgress.current = Math.min(1, sceneProgress.current)
-      sceneProgress.current = Math.max(0, sceneProgress.current)
+        // Плавно интерполируем sceneProgress к targetProgress
+        sceneProgress.current = THREE.MathUtils.lerp(sceneProgress.current, targetProgress.current, delta * 5)
+        sceneProgress.current = Math.min(1, sceneProgress.current)
+        sceneProgress.current = Math.max(0, sceneProgress.current)
 
-      // Получаем точку на кривой в зависимости от значения progress
-      positionCurve.getPointAt(sceneProgress.current, position.current)
-      targetCurve.getPointAt(sceneProgress.current, targetPosition.current)
+        // Получаем точку на кривой в зависимости от значения progress
+        positionCurve.getPointAt(sceneProgress.current, position.current)
+        targetCurve.getPointAt(sceneProgress.current, targetPosition.current)
 
-      // Двигаем камеру к точке на кривой с использованием lerp для плавной интерполяции
-      ref.camera.current.position.lerp(position.current, delta * 1.25)
+        // Двигаем камеру к точке на кривой с использованием lerp для плавной интерполяции
+        ref.camera.current.position.lerp(position.current, delta * 1.25)
 
-      // Плавное изменение кватерниона камеры с использованием slerp
-      ref.camera.current.lookAt(targetPosition.current)
-      ref.camera.current.getWorldQuaternion(targetQuaternion.current)
-      cameraQuaternion.current.slerp(targetQuaternion.current, delta * 3.25)
-      ref.camera.current.quaternion.copy(cameraQuaternion.current)
+        // Плавное изменение кватерниона камеры с использованием slerp
+        ref.camera.current.lookAt(targetPosition.current)
+        ref.camera.current.getWorldQuaternion(targetQuaternion.current)
+        cameraQuaternion.current.slerp(targetQuaternion.current, delta * 3.25)
+        ref.camera.current.quaternion.copy(cameraQuaternion.current)
 
-      // Плавное движение курсора
-      targetPointer.current.set(renderer.pointer.x, renderer.pointer.y)
-      currentPointer.current.lerp(targetPointer.current, delta * 5)
+        // Плавное движение курсора
+        targetPointer.current.set(renderer.pointer.x, renderer.pointer.y)
+        currentPointer.current.lerp(targetPointer.current, delta * 5)
 
-      // Обновляем смещение для lookAt
-      lookAtOffset.current.set(
-          targetPosition.current.x + (currentPointer.current.x) * factor,
-          targetPosition.current.y + (currentPointer.current.y) * factor,
-          targetPosition.current.z
-      )
+        // Обновляем смещение для lookAt
+        lookAtOffset.current.set(
+            targetPosition.current.x + (currentPointer.current.x) * factor,
+            targetPosition.current.y + (currentPointer.current.y) * factor,
+            targetPosition.current.z
+        )
 
-      // Плавное обновление позиции lookAt
-      lookAtPosition.current.lerp(lookAtOffset.current, delta * 5)
-      ref.camera.current.lookAt(lookAtPosition.current)
+        // Плавное обновление позиции lookAt
+        lookAtPosition.current.lerp(lookAtOffset.current, delta * 5)
+        ref.camera.current.lookAt(lookAtPosition.current)
     })
 
     return (

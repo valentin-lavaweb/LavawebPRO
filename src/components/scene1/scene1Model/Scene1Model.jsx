@@ -73,7 +73,7 @@ export default function Scene1Model(props) {
         ))} */}
         {/* <ambientLight intensity={1} /> */}
         <directionalLight intensity={0.1} color={color} position={[-10, 10, 5]}/>
-        <directionalLight intensity={0.1} color={color} position={[0, 10, 5]}/>
+        <directionalLight intensity={0.2} color={color} position={[0, 10, 5]}/>
 
         {/* MODEL */}
         <primitive object={schemesModel.scene} />
