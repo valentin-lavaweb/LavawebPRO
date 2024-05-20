@@ -141,15 +141,8 @@ export default forwardRef(function Scene1(props, ref) {
         }
     }, [])
 
-    useFrame((renderer, delta) => {
-        // ЕСЛИ МЫ НАХОДИМСЯ В НАЧАЛЕ ПРЕДЫДУЩЕЙ СЦЕНЫ
-        if (props.currentScene.current === props.scenes.current.length - 1 && props.progress.current <= 0.01) {
-            targetProgress.current = 0
-        }
-        // ЕСЛИ МЫ НАХОДИМСЯ В КОНЦЕ СЛЕДУЮЩЕЙ СЦЕНЫ
-        if (props.currentScene.current === 1 && props.progress.current >= 0.99) {
-            targetProgress.current = 1
-        }
+
+    function cameraMoving(renderer, delta) {
         // Плавно интерполируем sceneProgress к targetProgress
         sceneProgress.current = THREE.MathUtils.lerp(sceneProgress.current, targetProgress.current, delta * 5)
         sceneProgress.current = Math.min(1, sceneProgress.current)
@@ -182,6 +175,19 @@ export default forwardRef(function Scene1(props, ref) {
         // Плавное обновление позиции lookAt
         lookAtPosition.current.lerp(lookAtOffset.current, delta * 5)
         ref.camera.current.lookAt(lookAtPosition.current)
+    }
+
+    useFrame((renderer, delta) => {
+        // ЕСЛИ МЫ НАХОДИМСЯ В НАЧАЛЕ ПРЕДЫДУЩЕЙ СЦЕНЫ
+        if (props.currentScene.current === props.scenes.current.length - 1 && props.progress.current <= 0.01) {
+            targetProgress.current = 0
+        }
+        // ЕСЛИ МЫ НАХОДИМСЯ В КОНЦЕ СЛЕДУЮЩЕЙ СЦЕНЫ
+        if (props.currentScene.current === 1 && props.progress.current >= 0.99) {
+            targetProgress.current = 1
+        }
+
+        cameraMoving(renderer, delta)
     })
 
     return (
