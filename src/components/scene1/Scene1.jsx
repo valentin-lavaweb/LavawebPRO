@@ -34,7 +34,7 @@ export default forwardRef(function Scene1(props, ref) {
         new THREE.Vector3(-10.43, -5.21, 9.01),
         new THREE.Vector3(1.67, -9.0, 10.47),
         new THREE.Vector3(7.0, -9.2, 9.5),
-        new THREE.Vector3(7.0, -12.56, 9.5)
+        new THREE.Vector3(7.0, -11.2, 9.5)
     ]
     const targetPoints = [
         new THREE.Vector3(0, 3.4, -10),
@@ -54,9 +54,18 @@ export default forwardRef(function Scene1(props, ref) {
     }, [])
 
 
+    let pointer = { x: 0, y: 0 };
+
+    window.addEventListener('mousemove', (event) => {
+        pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+        pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      });
+
+
     function cameraMoving(renderer, delta) {
+        // console.log(pointer.x)
         // Плавно интерполируем sceneProgress к targetProgress
-        targetProgress.current = props.scroll
+        targetProgress.current = props.scroll.current
         sceneProgress.current = THREE.MathUtils.lerp(sceneProgress.current, targetProgress.current, delta * 5)
         sceneProgress.current = Math.min(1, sceneProgress.current)
         sceneProgress.current = Math.max(0, sceneProgress.current)
@@ -75,7 +84,15 @@ export default forwardRef(function Scene1(props, ref) {
         ref.camera.current.quaternion.copy(cameraQuaternion.current)
 
         // Плавное движение курсора
-        targetPointer.current.set(renderer.pointer.x, renderer.pointer.y)
+        // Если мы не в конце сцены
+        if (props.progress.current === 0) {
+            if (ref.camera.current.position.y < -8.5) {
+                pointer.y = Math.max(pointer.y, -0.25)
+            }
+            targetPointer.current.set(pointer.x, pointer.y)
+        } else { // Если мы в конце сцены
+            targetPointer.current.set(pointer.x * 0.25, pointer.y * 0.25)
+        }
         currentPointer.current.lerp(targetPointer.current, delta * 5)
 
         // Обновляем смещение для lookAt
@@ -91,16 +108,13 @@ export default forwardRef(function Scene1(props, ref) {
     }
 
     useFrame((renderer, delta) => {
-        // // ЕСЛИ МЫ НАХОДИМСЯ В НАЧАЛЕ ПРЕДЫДУЩЕЙ СЦЕНЫ
-        // if (props.currentScene.current === props.scenes.current.length - 1 && props.progress.current <= 0.01) {
-        //     targetProgress.current = 0
-        // }
-        // // ЕСЛИ МЫ НАХОДИМСЯ В КОНЦЕ СЛЕДУЮЩЕЙ СЦЕНЫ
-        // if (props.currentScene.current === 1 && props.progress.current >= 0.99) {
-        //     targetProgress.current = 1
-        // }
-
+        // console.log(ref.camera.current.position.y, props.progress.current)
         cameraMoving(renderer, delta)
+        if (props.currentScene.current === 0) {
+            easing.damp(groupRef.current.position, 'y', props.progress.current * 3.5, 0.0001);
+        } else if (props.currentScene.current === props.scenes.current.length - 1) {
+            easing.damp(groupRef.current.position, 'y', (props.progress.current - 1) * 0.5, 0.025);
+        }
     })
 
     return (

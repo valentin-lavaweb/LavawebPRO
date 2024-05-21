@@ -57,10 +57,11 @@ export default function MainScene(props) {
     scene: useRef(),
     camera: useRef(),
   });
+  const scrollCoefficent = useRef(10000)
 
   const scrollFunction = useCallback((progressTo) => (e) => {
     if (progress.current === 0) {
-      scenes.current[currentScene.current].scroll.current -= e.deltaY / 1000;
+      scenes.current[currentScene.current].scroll.current -= e.deltaY / scrollCoefficent.current;
       scenes.current[currentScene.current].scroll.current = Math.min(Math.max(scenes.current[currentScene.current].scroll.current, 0), 1);
     }
 
@@ -72,14 +73,14 @@ export default function MainScene(props) {
   }, [progressTo]);
 
   function switchScenes() {
-    console.log(`
-    currentScene: ${currentScene.current}
-    progress: ${progress.current}
-    progressTo: ${progressTo.current}
-    scene1Scroll: ${scenes.current[0].scroll.current}
-    scene2Scroll: ${scenes.current[1].scroll.current}
-    scene3Scroll: ${scenes.current[2].scroll.current}
-    `);
+    // console.log(`
+    // currentScene: ${currentScene.current}
+    // progress: ${progress.current}
+    // progressTo: ${progressTo.current}
+    // scene1Scroll: ${scenes.current[0].scroll.current}
+    // scene2Scroll: ${scenes.current[1].scroll.current}
+    // scene3Scroll: ${scenes.current[2].scroll.current}
+    // `);
     easing.damp(progress, 'current', progressTo.current, 0.6);
   
     if (progress.current > 1) {
@@ -207,13 +208,13 @@ export default function MainScene(props) {
     />
     <Scene1 ref={scenes.current[0]}
       currentScene={currentScene} nextScene={nextScene} progress={progress} scenes={scenes} activeMenu={props.activeMenu}
-      scroll={scenes.current[0].scroll.current}
+      scroll={scenes.current[0].scroll}
     />
     <Scene2 ref={scenes.current[1]} currentScene={currentScene} nextScene={nextScene} progress={progress} scenes={scenes}
-      scroll={scenes.current[1].scroll.current}
+      scroll={scenes.current[1].scroll}
     />
     <Scene3 ref={scenes.current[2]} currentScene={currentScene} nextScene={nextScene} progress={progress} scenes={scenes}
-      scroll={scenes.current[2].scroll.current}
+      scroll={scenes.current[2].scroll}
     />
     <SceneMenu ref={sceneMenuRef} activeMenu={props.activeMenu} hoveredElement={props.hoveredElement}/>
     <EffectComposer 

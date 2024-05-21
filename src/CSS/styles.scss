@@ -22,3 +22,12 @@ body {
         transition: 0.5s
     }
 }
+
+img {
+    user-select: none;
+}
+
+*::selection {
+    background: none;
+    color: rgba(0, 162, 255, 1);
+}
