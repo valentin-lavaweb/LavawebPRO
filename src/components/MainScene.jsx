@@ -8,12 +8,18 @@ import {
   Vignette,
 } from "@react-three/postprocessing";
 import { KernelSize } from "postprocessing";
-import { useFBO } from "@react-three/drei";
+import { OrbitControls, useFBO } from "@react-three/drei";
 import { extend, useFrame, useThree } from "@react-three/fiber";
 import { easing } from "maath";
 import RenderScene from "./renderScene/RenderScene.jsx";
 import BlurEffectComponent from "../templates/blurEffect/BlurEffectComponent.jsx";
 
+import * as Comlink from 'comlink';
+import workerImport from '../worker.worker.js?worker';
+import Scene1Test from "./scene1/Scene1Test.jsx";
+const worker = Comlink.wrap(new workerImport());
+
+// const Scene1WithWorkers = React.lazy(() => import("./scene1/Scene1WithWorkers.jsx"));
 const Scene1 = React.lazy(() => import("./scene1/Scene1.jsx"));
 const Scene2 = React.lazy(() => import("./scene2/Scene2.jsx"));
 const Scene3 = React.lazy(() => import("./scene3/Scene3.jsx"));
@@ -58,8 +64,12 @@ export default function MainScene(props) {
     camera: useRef(),
   });
   const scrollCoefficent = useRef(10000)
+  const bloomRef = useRef()
+  const composerRef = useRef()
+  console.log(composerRef)
 
-  const scrollFunction = useCallback((progressTo) => (e) => {
+  const scrollFunction = useCallback((progressTo) => async(e) => {
+    // const workerResult = await worker.scroll(progress)
     if (progress.current === 0) {
       scenes.current[currentScene.current].scroll.current -= e.deltaY / scrollCoefficent.current;
       scenes.current[currentScene.current].scroll.current = Math.min(Math.max(scenes.current[currentScene.current].scroll.current, 0), 1);
@@ -155,8 +165,7 @@ export default function MainScene(props) {
 
   useFrame(({gl, scene, camera}, delta) => {
     if(props.activeSceneMenu.current === false) {
-        switchScenes();
-        // checkProgressTo()
+      switchScenes();
       renderSceneRef.current.scene.current.visible = false;
       sceneMenuRef.current.scene.current.visible = false;
 
@@ -199,6 +208,10 @@ export default function MainScene(props) {
     }
   });
 
+  // useFrame(() => {
+  //   renderSceneRef.current.scene.current.visible = false
+  //   scenes.current[0].scene.current.visible = true
+  // }, 1)
   return <>
     <RenderScene ref={renderSceneRef}
       renderTarget={renderTarget}
@@ -210,6 +223,7 @@ export default function MainScene(props) {
       currentScene={currentScene} nextScene={nextScene} progress={progress} scenes={scenes} activeMenu={props.activeMenu}
       scroll={scenes.current[0].scroll}
     />
+    {/* <Scene1Test ref={scenes.current[0]}/> */}
     <Scene2 ref={scenes.current[1]} currentScene={currentScene} nextScene={nextScene} progress={progress} scenes={scenes}
       scroll={scenes.current[1].scroll}
     />
@@ -218,6 +232,7 @@ export default function MainScene(props) {
     />
     <SceneMenu ref={sceneMenuRef} activeMenu={props.activeMenu} hoveredElement={props.hoveredElement}/>
     <EffectComposer 
+      ref={composerRef}
       multisampling={0} 
       disableNormalPass={true}
       depthBuffer={true}
@@ -225,6 +240,7 @@ export default function MainScene(props) {
       resolutionScale={0.5}
     >
       <Bloom
+        ref={bloomRef}
         mipmapBlur
         kernelSize={KernelSize.VERY_LARGE}
         luminanceThreshold={1}
@@ -234,5 +250,6 @@ export default function MainScene(props) {
       <Noise opacity={0.025} />
       <Vignette eskil={false} offset={0.1} darkness={1.1} />
     </EffectComposer>
+    {/* <OrbitControls /> */}
   </>
 }

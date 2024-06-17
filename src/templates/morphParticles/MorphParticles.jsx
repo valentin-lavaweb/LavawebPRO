@@ -11,7 +11,7 @@ import { easing } from 'maath'
 export default function MorphParticles(props) {
 
     // Список моделей
-    const logoModel = useGLTF('/models/lava_logo.glb')
+    const logoModel = useGLTF('/models/lavaLogo.glb')
     const model1 = useGLTF('/models/earth.glb')
     const model2 = useGLTF('/models/factory.glb')
 

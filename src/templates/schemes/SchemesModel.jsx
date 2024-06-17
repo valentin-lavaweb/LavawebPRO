@@ -2,81 +2,18 @@ import * as THREE from 'three'
 import React, { useEffect, useMemo, useRef } from "react";
 import { extend, useFrame } from '@react-three/fiber';
 import { shaderMaterial } from '@react-three/drei';
-import { RectAreaLightHelper } from 'three/examples/jsm/Addons.js';
-import { RectAreaLightUniformsLib } from 'three/examples/jsm/Addons.js';
-import vectors from './vectors.json'
-RectAreaLightUniformsLib.init()
 
 export default function SchemesModel(props) {
 
     const particlesRef = useRef();
     const randomRange = (min, max) => Math.random() * (max - min) + min;
 
-    // Определение нескольких кривых
-    const customCurves = useMemo(() => {
-        const curvesArray = [
-
-            new THREE.CatmullRomCurve3([
-                new THREE.Vector3(1, 1.5, 1.5),
-                new THREE.Vector3(1, 1.2, 1.5),
-                new THREE.Vector3(1.2, 1.0, 1.5),
-                new THREE.Vector3(1.2, -1.0, 1.5),
-                new THREE.Vector3(1.3, -1.1, 1.5),
-                new THREE.Vector3(1.3, -1.5, 1.5),
-            ], false,'catmullrom', 0.0),
-
-            new THREE.CatmullRomCurve3([
-                new THREE.Vector3(-1, 1.5, 1.5),
-                new THREE.Vector3(-1, 1.0, 1.5),
-                new THREE.Vector3(-1.2, 0.8, 1.5),
-                new THREE.Vector3(-1.2, 0.4, 1.5),
-                new THREE.Vector3(-1.0, 0.2, 1.5),
-                new THREE.Vector3(-1.0, -1.5, 1.5),
-            ], false,'catmullrom', 0.0),
-
-            new THREE.CatmullRomCurve3([
-                new THREE.Vector3(-0.75, 1.5, 1.5),
-                new THREE.Vector3(-0.75, 0.7, 1.5),
-                new THREE.Vector3(-0.65, 0.6, 1.5),
-                new THREE.Vector3(-0.65, 0.1, 1.5),
-                new THREE.Vector3(-0.55, 0.0, 1.5),
-                new THREE.Vector3(-0.55, -1.0, 1.5),
-                new THREE.Vector3(-0.65, -1.1, 1.5),
-                new THREE.Vector3(-0.65, -1.5, 1.5),
-            ], false,'catmullrom', 0.0),
-
-
-        ]
-        const curvesCount = curvesArray.length
-
-        return {curvesArray, curvesCount}
-    }, []);
-
-    const curves = useMemo(() => {
-        let curvesArray = [];
-        const curvesCount = 1
-        const curveVectorsCount = 10
-
-        function generateRandomCurvePoints(curveVectorsCount){
-            let points = [];
-            for (let i = 0; i < curveVectorsCount; i++) {
-                points.push(new THREE.Vector3(randomRange(-1, 1), randomRange(-1, 1), randomRange(-1, 1)));
-            }
-            return points;
-        };
-
-        for (let i = 0; i < curvesCount; i++) {
-            curvesArray.push(new THREE.CatmullRomCurve3(generateRandomCurvePoints(curveVectorsCount), false, 'catmullrom', 0.0));
-        }
-        return {curvesArray, curvesCount};
-    }, []);
-
     const jsonCurves = useMemo( () => {
         const curvesArray = [];
-        const curvesCount = vectors.objects.length
+        const curvesCount = props.vectors.objects.length
         function generateCurvePoints(index){
             let points = [];
-            const pointsArray = vectors.objects[index].points
+            const pointsArray = props.vectors.objects[index].points
             for (let i = 0; i < pointsArray.length; i++) {
                 points.push(new THREE.Vector3(pointsArray[i].x, pointsArray[i].y, pointsArray[i].z));
             }
@@ -94,8 +31,8 @@ export default function SchemesModel(props) {
         const pointsArray = [];
         const lifesArray = [];
         const sizesArray = [];
-        const particlesCount = 1500 * jsonCurves.curvesCount;
-        const timeOffsets = jsonCurves.curvesArray.map(() => randomRange(1, jsonCurves.curvesArray.length));
+        const particlesCount = props.particlesCount * jsonCurves.curvesCount;
+        const timeOffsets = jsonCurves.curvesArray.map(() => randomRange(1, jsonCurves.curvesArray.length * props.delay));
 
         for (let i = 0; i < particlesCount; i++) {
             const curveIndex = Math.floor(Math.random() * jsonCurves.curvesArray.length); // случайный выбор кривой
@@ -104,8 +41,7 @@ export default function SchemesModel(props) {
             const point = curve.getPoint(t);
     
             pointsArray.push(point.x + Math.random() * 0.0015, point.y + Math.random() * 0.0015, point.z + Math.random() * 0.0015);
-            const lifeTimeWithOffset = i * 0.0001 + timeOffsets[curveIndex]; // добавляем смещение времени
-            // const lifeTimeWithOffset = i * 0.000075
+            const lifeTimeWithOffset = i * props.speed + timeOffsets[curveIndex]; // добавляем смещение времени
             lifesArray.push(lifeTimeWithOffset);
             sizesArray.push(randomRange(2, 4));
         }
@@ -168,13 +104,8 @@ export default function SchemesModel(props) {
     extend({ParticlesShaderMaterial})
 
     useFrame((renderer, delta) => {
-        const material = particlesRef.current.material;
-        material.uniforms.time.value += delta * randomRange(1.0, 1.1);
+        particlesRef.current.material.uniforms.time.value += delta * randomRange(1.0, 1.1);
     })
-    useEffect(() => {
-    }, [])
-
-    extend({ RectAreaLightHelper });
 
     return <>
         {/* PARTICLES */}

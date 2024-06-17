@@ -13,27 +13,19 @@ export default forwardRef( function Scene3(props, ref) {
         ref.scene.current.visible = false
     }, [])
 
-    useFrame((renderer, delta) => {
-      // // ЕСЛИ МЫ НАХОДИМСЯ В НАЧАЛЕ ПРЕДЫДУЩЕЙ СЦЕНЫ
-      // if (props.currentScene.current === 1 && props.progress.current <= 0.01) {
-      //     targetProgress.current = 0
-      // }
-      // // ЕСЛИ МЫ НАХОДИМСЯ В КОНЦЕ СЛЕДУЮЩЕЙ СЦЕНЫ
-      // if (props.currentScene.current === 0 && props.progress.current >= 0.99) {
-      //     targetProgress.current = 1
-      // }
-      // Плавно интерполируем sceneProgress к targetProgress
-      targetProgress.current = props.scroll
-      sceneProgress.current = THREE.MathUtils.lerp(sceneProgress.current, targetProgress.current, delta * 5)
-      sceneProgress.current = Math.min(1, sceneProgress.current)
-      sceneProgress.current = Math.max(0.001, sceneProgress.current)
+    // useFrame((renderer, delta) => {
+    //   // Плавно интерполируем sceneProgress к targetProgress
+    //   targetProgress.current = props.scroll
+    //   sceneProgress.current = THREE.MathUtils.lerp(sceneProgress.current, targetProgress.current, delta * 5)
+    //   sceneProgress.current = Math.min(1, sceneProgress.current)
+    //   sceneProgress.current = Math.max(0.001, sceneProgress.current)
 
-      if (props.currentScene.current === 2) {
-          easing.damp(groupRef.current.position, 'y', (props.progress.current - 0) * 2, 0.05);
-      } else if (props.currentScene.current === 1) {
-          easing.damp(groupRef.current.position, 'y', (props.progress.current - 1) * 2, 0.05);
-      }
-    })
+    //   if (props.currentScene.current === 2) {
+    //       easing.damp(groupRef.current.position, 'y', (props.progress.current - 0) * 2, 0.05);
+    //   } else if (props.currentScene.current === 1) {
+    //       easing.damp(groupRef.current.position, 'y', (props.progress.current - 1) * 2, 0.05);
+    //   }
+    // })
 
     return <>
     <scene ref={ref.scene}>
